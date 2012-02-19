@@ -6,7 +6,7 @@
 module('_M.textadept.keys')]]
 
 -- c:       C       G     J                   T ~              ) ] }     /  \t\r
--- a:  a   cC DeE     H IjJkK L   NoO P Q    tTuU  w xX  zZ_   ) ] }   +-/  ~~\r
+-- a:  a   cC DeE     H IjJkK L   NoO   Q    tTuU  w xX  zZ_   ) ] }   +-/  ~~\r
 -- ca: a b  CdDe    GhHiIjJkK L    oO  qQ       U  wW  y zZ_"'()[]{}<>*+ /?
 -- ~: reserved.
 
@@ -258,5 +258,12 @@ events.connect(events.LANGUAGE_MODULE_LOADED, function(lang)
     return ret
   end
 end)
+
+local last_buffer = buffer
+-- Save last buffer. Useful after gui.switch_buffer().
+events.connect(events.BUFFER_BEFORE_SWITCH, function()
+  last_buffer = _G.buffer
+end)
+keys['aP'] = function() view:goto_buffer(_BUFFERS[last_buffer]) end
 
 return { utils = {} } -- so testing menu does not error
