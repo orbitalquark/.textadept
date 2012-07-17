@@ -6,8 +6,8 @@
 module('_M.textadept.keys')]]
 
 -- c:          ~   ~
--- ca:       g ~j         t    y
--- a:  aA  cC De         jJkKlLm   oO          uU     X   Z_               =
+-- ca:       g ~          t    y
+-- a:  aA  cC D           JkKlLm   oO          uU     X   Z_               =
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -149,7 +149,8 @@ keys[not NCURSES and 'cau' or 'cmu'] = { Mtextadept.snapopen.open, _USERHOME }
 local excludes = {
   extensions = { 'html' },
   folders = {
-    '.hg', 'releases', 'win32gtk', 'doxygen', 'images', 'scintilla', 'luajit'
+    '.hg', 'api', 'doxygen', 'images', 'releases', 'cdk', 'gtkosx', 'luajit',
+    'scintilla', 'termkey', 'win32gtk'
   }
 }
 keys[not NCURSES and 'cah' or 'cmh'] =
@@ -268,5 +269,9 @@ events.connect(events.BUFFER_BEFORE_SWITCH, function()
   last_buffer = _G.buffer
 end)
 keys['az'] = function() view:goto_buffer(_BUFFERS[last_buffer]) end
+
+--keys[not NCURSES and 'ae' or 'me'] = _M.file_browser.init
+--keys[not NCURSES and 'caj' or 'cmj'] = _M.version_control.snapopen_project
+--keys[not NCURSES and 'aj' or 'mj'] = _M.version_control.command
 
 return { utils = {} } -- so testing menu does not error
