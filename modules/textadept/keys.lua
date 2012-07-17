@@ -7,12 +7,7 @@ module('_M.textadept.keys')]]
 
 -- c:          ~   ~
 -- ca:       g ~j         t    y
--- a:  aA  cC De         jJkKlLm   oO          uU     X  zZ_               =
-
--- c:       C       G     J                   T ~              ) ] }        \t\r
--- a:  a   cC DeE     H IjJkK L   NoO P Q    tTuU  w xX  zZ_   ) ] }   +-/  ~~\r
--- ca: a b  CdDe    G HiIjJkK L    oO  qQ    ~  U  wW  y zZ_"'()[]{}<>*+ /?
--- ~: reserved.
+-- a:  aA  cC De         jJkKlLm   oO          uU     X   Z_               =
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -272,6 +267,6 @@ local last_buffer = buffer
 events.connect(events.BUFFER_BEFORE_SWITCH, function()
   last_buffer = _G.buffer
 end)
-keys['aP'] = function() view:goto_buffer(_BUFFERS[last_buffer]) end
+keys['az'] = function() view:goto_buffer(_BUFFERS[last_buffer]) end
 
 return { utils = {} } -- so testing menu does not error
