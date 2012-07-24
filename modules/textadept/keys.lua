@@ -40,8 +40,8 @@ keys.co = buffer.save
 keys[not NCURSES and 'cao' or 'cmo'] = buffer.save_as
 keys.cx = buffer.close
 keys[not NCURSES and 'ax' or 'mx'] = io.close_all
--- TODO: Mtextadept.session.load after prompting with open dialog
--- TODO: Mtextadept.session.save after prompting with save dialog
+-- TODO: Mtextadept.session.load
+-- TODO: Mtextadept.session.save
 keys.cq = quit
 
 -- Edit.
@@ -129,7 +129,7 @@ keys[not NCURSES and 'aG' or 'mG'] = Mtextadept.run.compile
 keys[not NCURSES and 'a|' or 'm|'] = Mtextadept.filter_through.filter_through
 -- Adeptsense.
 -- Complete symbol is 'c '.
-keys[not NCURSES and 'a?' or 'm?'] = Mtextadept.adeptsense.show_documentation
+keys[not NCURSES and 'a?' or 'm?'] = Mtextadept.adeptsense.show_apidoc
 -- Snippets.
 keys['\t'] = Msnippets._insert
 keys['s\t'] = Msnippets._previous
