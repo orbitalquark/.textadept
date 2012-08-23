@@ -143,15 +143,6 @@ keys[not NCURSES and 'aP' or 'mP'] = Mbookmarks.goto_prev
 keys.cam = Mbookmarks.goto_bookmark -- GTK only
 -- Snapopen.
 keys[not NCURSES and 'cau' or 'cmu'] = { Mtextadept.snapopen.open, _USERHOME }
-local excludes = {
-  extensions = { 'html' },
-  folders = {
-    '.hg', 'api', 'doxygen', 'images', 'releases', 'cdk', 'gtkosx', 'luajit',
-    'scintilla', 'termkey', 'win32gtk'
-  }
-}
-keys[not NCURSES and 'cah' or 'cmh'] =
-  { Mtextadept.snapopen.open, _HOME, excludes }
 -- Miscellaneous.
 -- TODO: function() -- show style
 --   local buffer = _G.buffer
