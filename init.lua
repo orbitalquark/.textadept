@@ -1,4 +1,4 @@
-require 'textadept'
+_M.textadept = require 'textadept'
 
 _M.file_browser = require 'file_browser'
 keys[not NCURSES and 'ae' or 'me'] = _M.file_browser.init

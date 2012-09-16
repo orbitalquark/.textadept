@@ -7,7 +7,7 @@ module('_M.textadept.keys')]]
 
 -- c:          ~   ~
 -- ca:       g ~          t    y
--- a:  aA  cC D           JkKlLm   oO          uU     X   Z_               =
+-- a:  aA  cC D           JkKlLm   oO          uU     X   Z              - =
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -101,7 +101,7 @@ keys[not NCURSES and 'a[' or 'm['] = { Mediting.enclose, '[', ']' }
 keys[not NCURSES and 'a{' or 'm{'] = { Mediting.enclose, '{', '}' }
 keys[not NCURSES and 'a*' or 'm*'] = any_char_mt(Mediting.enclose)
 keys[not NCURSES and 'a+' or 'm+'] = { Mediting.grow_selection, 1 }
-keys[not NCURSES and 'a-' or 'm-'] = { Mediting.grow_selection, -1 }
+keys[not NCURSES and 'a_' or 'm_'] = { Mediting.grow_selection, -1 }
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
 
@@ -111,10 +111,10 @@ keys[not NCURSES and 'as' or 'ms'] = gui.find.find_next
 keys[not NCURSES and 'aS' or 'mS'] = gui.find.find_prev
 keys[not NCURSES and 'ar' or 'mr'] = gui.find.replace
 keys[not NCURSES and 'aR' or 'mR'] = gui.find.replace_all
--- Find Next is an when find pane is focused.
--- Find Prev is ap when find pane is focused.
--- Replace is ar when find pane is focused.
--- Replace All is aa when find pane is focused.
+-- Find Next is an when find pane is focused (GTK only).
+-- Find Prev is ap when find pane is focused (GTK only).
+-- Replace is ar when find pane is focused (GTK only).
+-- Replace All is aa when find pane is focused (GTK only).
 keys[not NCURSES and 'ai' or 'mi'] = gui.find.find_incremental
 -- Find in Files is ai when find pane is focused.
 -- TODO: { gui.find.goto_file_in_list, true }
@@ -256,7 +256,9 @@ local last_buffer = buffer
 events.connect(events.BUFFER_BEFORE_SWITCH, function()
   last_buffer = _G.buffer
 end)
-keys['az'] = function() view:goto_buffer(_BUFFERS[last_buffer]) end
+keys['az'] = function()
+  if (_BUFFERS[last_buffer]) then view:goto_buffer(_BUFFERS[last_buffer]) end
+end
 
 --keys[not NCURSES and 'ae' or 'me'] = _M.file_browser.init
 --keys[not NCURSES and 'caj' or 'cmj'] = _M.version_control.snapopen_project
