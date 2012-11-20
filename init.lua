@@ -7,4 +7,5 @@ _M.version_control = require 'version_control'
 local vc = _M.version_control
 keys[not NCURSES and 'caj' or 'cmj'] = vc.snapopen_project
 keys[not NCURSES and 'aj' or 'mj'] = vc.command
-keys[not NCURSES and 'cah' or 'cmh'] = { vc.snapopen_project, _HOME..'/' }
+keys[not NCURSES and 'cah' or 'cmh'] = {vc.snapopen_project, _HOME..'/'}
+if NCURSES then keys.cmg = keys.cmh end

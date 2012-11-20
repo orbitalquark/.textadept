@@ -5,15 +5,15 @@
 -- Manages and defines key commands in Textadept.
 module('_M.textadept.keys')]]
 
--- c:          ~   ~
--- ca:       g ~          t    y
+-- c:         ~~   ~
+-- ca:        ~~          t    y
 -- a:  aA  cC D           JkKlLm   oO          uU     X   Z              - =
 
 -- Utility functions.
 local function any_char_mt(f)
-  return setmetatable({['\0'] = {}}, { __index = function(t, k)
-                          if #k == 1 then return { f, k, k } end
-                        end })
+  return setmetatable({['\0'] = {}}, {__index = function(t, k)
+                        if #k == 1 then return {f, k, k} end
+                      end})
 end
 local function toggle_setting(setting, i)
   local state = buffer[setting]
@@ -64,20 +64,20 @@ keys.cw = function() -- delete word
 end
 keys[not NCURSES and 'caa' or 'cma'] = buffer.select_all
 keys['c]'] = Mediting.match_brace
-keys[not NCURSES and 'c ' or 'c@'] = { Mediting.autocomplete_word, '%w_' }
+keys[not NCURSES and 'c ' or 'c@'] = {Mediting.autocomplete_word, '%w_'}
 keys[not NCURSES and 'aw' or 'mw'] = Mediting.highlight_word
 keys[not NCURSES and 'c/' or 'c_'] = Mediting.block_comment
 keys.ct = Mediting.transpose_chars
 keys.cj = Mediting.join_lines
 -- Select.
-keys[not NCURSES and 'ca]' or 'cm]'] = { Mediting.match_brace, 'select' }
-keys[not NCURSES and 'a>' or 'm>'] = { Mediting.select_enclosed, '>', '<' }
--- TODO: { Mediting.select_enclosed, '<', '>' }
-keys[not NCURSES and 'a"' or 'm"'] = { Mediting.select_enclosed, '"', '"' }
-keys[not NCURSES and "a'" or "m'"] = { Mediting.select_enclosed, "'", "'" }
-keys[not NCURSES and 'a)' or 'm)'] = { Mediting.select_enclosed, '(', ')' }
-keys[not NCURSES and 'a]' or 'm]'] = { Mediting.select_enclosed, '[', ']' }
-keys[not NCURSES and 'a}' or 'm}'] = { Mediting.select_enclosed, '{', '}' }
+keys[not NCURSES and 'ca]' or 'cm]'] = {Mediting.match_brace, 'select'}
+keys[not NCURSES and 'a>' or 'm>'] = {Mediting.select_enclosed, '>', '<'}
+-- TODO: {Mediting.select_enclosed, '<', '>'}
+keys[not NCURSES and 'a"' or 'm"'] = {Mediting.select_enclosed, '"', '"'}
+keys[not NCURSES and "a'" or "m'"] = {Mediting.select_enclosed, "'", "'"}
+keys[not NCURSES and 'a)' or 'm)'] = {Mediting.select_enclosed, '(', ')'}
+keys[not NCURSES and 'a]' or 'm]'] = {Mediting.select_enclosed, '[', ']'}
+keys[not NCURSES and 'a}' or 'm}'] = {Mediting.select_enclosed, '{', '}'}
 -- TODO: any_char_mt(Mediting.select_enclosed)
 keys[not NCURSES and 'caw' or 'cmw'] = Mediting.select_word
 keys[not NCURSES and 'cae' or 'cme'] = Mediting.select_line
@@ -93,15 +93,15 @@ keys[not NCURSES and 'a<' or 'm<'] = function() -- enclose as XML tags
   while buffer.char_at[pos - 1] ~= 60 do pos = pos - 1 end -- '<'
   buffer:insert_text(-1, '</'..buffer:text_range(pos, buffer.current_pos))
 end
-keys[not NCURSES and 'a/' or 'm/'] = { Mediting.enclose, '<', ' />' }
-keys[not NCURSES and 'aQ' or 'mQ'] = { Mediting.enclose, '"', '"' }
-keys[not NCURSES and 'aq' or 'mq'] = { Mediting.enclose, "'", "'" }
-keys[not NCURSES and 'a(' or 'm('] = { Mediting.enclose, '(', ')' }
-keys[not NCURSES and 'a[' or 'm['] = { Mediting.enclose, '[', ']' }
-keys[not NCURSES and 'a{' or 'm{'] = { Mediting.enclose, '{', '}' }
+keys[not NCURSES and 'a/' or 'm/'] = {Mediting.enclose, '<', ' />'}
+keys[not NCURSES and 'aQ' or 'mQ'] = {Mediting.enclose, '"', '"'}
+keys[not NCURSES and 'aq' or 'mq'] = {Mediting.enclose, "'", "'"}
+keys[not NCURSES and 'a(' or 'm('] = {Mediting.enclose, '(', ')'}
+keys[not NCURSES and 'a[' or 'm['] = {Mediting.enclose, '[', ']'}
+keys[not NCURSES and 'a{' or 'm{'] = {Mediting.enclose, '{', '}'}
 keys[not NCURSES and 'a*' or 'm*'] = any_char_mt(Mediting.enclose)
-keys[not NCURSES and 'a+' or 'm+'] = { Mediting.grow_selection, 1 }
-keys[not NCURSES and 'a_' or 'm_'] = { Mediting.grow_selection, -1 }
+keys[not NCURSES and 'a+' or 'm+'] = {Mediting.grow_selection, 1}
+keys[not NCURSES and 'a_' or 'm_'] = {Mediting.grow_selection, -1}
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
 
@@ -117,8 +117,8 @@ keys[not NCURSES and 'aR' or 'mR'] = gui.find.replace_all
 -- Replace All is aa when find pane is focused (GTK only).
 keys[not NCURSES and 'ai' or 'mi'] = gui.find.find_incremental
 -- Find in Files is ai when find pane is focused.
--- TODO: { gui.find.goto_file_in_list, true }
--- TODO: { gui.find.goto_file_in_list, false }
+-- TODO: {gui.find.goto_file_in_list, true}
+-- TODO: {gui.find.goto_file_in_list, false}
 keys.cg = Mediting.goto_line
 
 -- Tools.
@@ -142,7 +142,7 @@ keys[not NCURSES and 'aN' or 'mN'] = Mbookmarks.goto_next
 keys[not NCURSES and 'aP' or 'mP'] = Mbookmarks.goto_prev
 keys.cam = Mbookmarks.goto_bookmark -- GTK only
 -- Snapopen.
-keys[not NCURSES and 'cau' or 'cmu'] = { Mtextadept.snapopen.open, _USERHOME }
+keys[not NCURSES and 'cau' or 'cmu'] = {Mtextadept.snapopen.open, _USERHOME}
 -- Miscellaneous.
 -- TODO: function() -- show style
 --   local buffer = _G.buffer
@@ -154,22 +154,22 @@ keys[not NCURSES and 'cau' or 'cmu'] = { Mtextadept.snapopen.open, _USERHOME }
 -- end
 
 -- Buffers.
-keys[not NCURSES and 'an' or 'mn'] = { view.goto_buffer, view, 1, true }
-keys[not NCURSES and 'ap' or 'mp'] = { view.goto_buffer, view, -1, true }
+keys[not NCURSES and 'an' or 'mn'] = {view.goto_buffer, view, 1, true}
+keys[not NCURSES and 'ap' or 'mp'] = {view.goto_buffer, view, -1, true}
 keys[not NCURSES and 'cab' or 'cmb'] = gui.switch_buffer
 -- Indentation.
-keys[not NCURSES and 'at' or 'mt'] = { toggle_setting, 'use_tabs' }
+keys[not NCURSES and 'at' or 'mt'] = {toggle_setting, 'use_tabs'}
 keys[not NCURSES and 'aT' or 'mT'] = Mediting.convert_indentation
 -- EOL Mode.
 -- Encoding.
 keys[not NCURSES and 'cal' or 'cml'] = Mtextadept.mime_types.select_lexer
-keys.f5 = { buffer.colourise, buffer, 0, -1 }
+keys.f5 = {buffer.colourise, buffer, 0, -1}
 
 -- Views.
-keys.can = { gui.goto_view, 1, true }
-keys.cap = { gui.goto_view, -1, true }
-keys.cas = { view.split, view } -- horizontal
-keys.cav = { view.split, view, true } -- vertical
+keys.can = {gui.goto_view, 1, true}
+keys.cap = {gui.goto_view, -1, true}
+keys.cas = {view.split, view} -- horizontal
+keys.cav = {view.split, view, true} -- vertical
 keys.cax = function() _G.view:unsplit() return true end
 keys.caX = function() while _G.view:unsplit() do end end -- GTK only
 -- TODO: function() _G.view.size = _G.view.size + 10 end
@@ -178,11 +178,11 @@ keys[not NCURSES and 'caf' or 'cmf'] = function() -- toggle fold
   local buffer = _G.buffer
   buffer:toggle_fold(buffer:line_from_position(buffer.current_pos))
 end
-keys[not NCURSES and 'aE' or 'mE'] = { toggle_setting, 'view_eol' }
-keys[not NCURSES and 'aW' or 'mW'] = { toggle_setting, 'wrap_mode' }
-keys[not NCURSES and 'aI' or 'mI'] = { toggle_setting, 'indentation_guides' }
-keys[not NCURSES and 'aH' or 'mH'] = { toggle_setting, 'view_ws' }
--- TODO: { toggle_setting, 'virtual_space_options', 2 }
+keys[not NCURSES and 'aE' or 'mE'] = {toggle_setting, 'view_eol'}
+keys[not NCURSES and 'aW' or 'mW'] = {toggle_setting, 'wrap_mode'}
+keys[not NCURSES and 'aI' or 'mI'] = {toggle_setting, 'indentation_guides'}
+keys[not NCURSES and 'aH' or 'mH'] = {toggle_setting, 'view_ws'}
+-- TODO: {toggle_setting, 'virtual_space_options', 2}
 keys['c='] = buffer.zoom_in -- GTK only
 keys['c-'] = buffer.zoom_out -- GTK only
 keys['c0'] = function() _G.buffer.zoom = 0 end -- GTK only
@@ -225,6 +225,8 @@ keys.ch = buffer.delete_back
 keys[not NCURSES and 'ah' or 'mh'] = buffer.del_word_left
 keys.cd = buffer.clear
 keys[not NCURSES and 'ad' or 'md'] = buffer.del_word_right
+keys.ci = buffer.tab
+keys.cm = buffer.new_line
 -- TODO: buffer.char_right_rect_extend
 -- TODO: buffer.char_left_rect_extend
 -- TODO: buffer.line_down_rect_extend
@@ -238,8 +240,8 @@ keys[not NCURSES and 'ad' or 'md'] = buffer.del_word_right
 -- TODO: buffer.line_scroll_up
 
 -- Miscellaneous not in standard menu.
--- TODO: { events.emit, events.CALL_TIP_CLICK, 1 }
--- TODO: { events.emit, events.CALL_TIP_CLICK, 2 }
+-- TODO: {events.emit, events.CALL_TIP_CLICK, 1}
+-- TODO: {events.emit, events.CALL_TIP_CLICK, 2}
 
 -- Language-specific modules.
 events.connect(events.LANGUAGE_MODULE_LOADED, function(lang)
@@ -264,4 +266,4 @@ end
 --keys[not NCURSES and 'caj' or 'cmj'] = _M.version_control.snapopen_project
 --keys[not NCURSES and 'aj' or 'mj'] = _M.version_control.command
 
-return { utils = {} } -- so testing menu does not error
+return {utils = {}} -- so testing menu does not error
