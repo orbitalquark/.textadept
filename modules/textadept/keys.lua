@@ -1,4 +1,4 @@
--- Copyright 2007-2013 Mitchell Foral mitchell<att>caladbolg.net. See LICENSE.
+-- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 --[[ This comment is for LuaDoc.
 ---
