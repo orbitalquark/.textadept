@@ -142,7 +142,7 @@ keys[not NCURSES and 'aN' or 'mN'] = Mbookmarks.goto_next
 keys[not NCURSES and 'aP' or 'mP'] = Mbookmarks.goto_prev
 keys.cam = Mbookmarks.goto_bookmark -- GTK only
 -- Snapopen.
-keys[not NCURSES and 'cau' or 'cmu'] = {Mtextadept.snapopen.open, _USERHOME}
+keys[not NCURSES and 'cau' or 'cmu'] = {io.snapopen, _USERHOME}
 -- Miscellaneous.
 -- TODO: function() -- show style
 --   local buffer = _G.buffer
