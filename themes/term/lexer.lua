@@ -10,13 +10,13 @@ local l, color, style = lexer, lexer.color, lexer.style
 
 l.colors = {
   black = color('00', '00', '00'),
-  red = color('FF', '00', '00'),
-  green = color('00', 'FF', '00'),
-  yellow = color('FF', 'FF', '00'),
-  blue = color('00', '00', 'FF'),
-  magenta = color('FF', '00', 'FF'),
-  cyan = color('00', 'FF', 'FF'),
-  white = color('FF', 'FF', 'FF')
+  red = color('80', '00', '00'),
+  green = color('00', '80', '00'),
+  yellow = color('80', '80', '00'),
+  blue = color('00', '00', '80'),
+  magenta = color('80', '00', '80'),
+  cyan = color('00', '80', '80'),
+  white = color('80', '80', '80')
 }
 
 l.style_nothing    = style{                                    }
