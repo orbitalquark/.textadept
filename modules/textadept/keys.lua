@@ -7,7 +7,7 @@ module('_M.textadept.keys')]]
 
 -- c:         ~~   ~
 -- ca:        ~~          t    y
--- a:  aA  cC D           JkKlLm   oO          uU     X   Z              - =
+-- a:  aA  cC D           JkKlLm   oO          uU     X   Z_           +  - =
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -32,7 +32,7 @@ local Mbookmarks, Msnippets = Mtextadept.bookmarks, Mtextadept.snippets
 keys.LANGUAGE_MODULE_PREFIX = 'cl'
 
 -- File.
-keys[not CURSES and 'cac' or 'cmc'] = new_buffer
+keys[not CURSES and 'cac' or 'cmc'] = buffer.new
 keys.cr = io.open_file
 keys[not CURSES and 'car' or 'cmr'] = io.open_recent_file
 -- TODO: buffer.reload
@@ -64,11 +64,13 @@ keys.cw = function() -- delete word
 end
 keys[not CURSES and 'caa' or 'cma'] = buffer.select_all
 keys['c]'] = Mediting.match_brace
-keys[not CURSES and 'c ' or 'c@'] = {Mediting.autocomplete_word, '%w_'}
+keys[not CURSES and 'c ' or 'c@'] = Mediting.autocomplete_word
 keys[not CURSES and 'aw' or 'mw'] = Mediting.highlight_word
 keys[not CURSES and 'c/' or 'c_'] = Mediting.block_comment
 keys.ct = Mediting.transpose_chars
 keys.cj = Mediting.join_lines
+keys[not CURSES and 'a|' or 'm|'] = {gui.command_entry.enter_mode,
+                                     'filter_through'}
 -- Select.
 keys[not CURSES and 'ca]' or 'cm]'] = {Mediting.match_brace, 'select'}
 keys[not CURSES and 'a>' or 'm>'] = {Mediting.select_enclosed, '>', '<'}
@@ -100,8 +102,6 @@ keys[not CURSES and 'a(' or 'm('] = {Mediting.enclose, '(', ')'}
 keys[not CURSES and 'a[' or 'm['] = {Mediting.enclose, '[', ']'}
 keys[not CURSES and 'a{' or 'm{'] = {Mediting.enclose, '{', '}'}
 keys[not CURSES and 'a*' or 'm*'] = any_char_mt(Mediting.enclose)
-keys[not CURSES and 'a+' or 'm+'] = {Mediting.grow_selection, 1}
-keys[not CURSES and 'a_' or 'm_'] = {Mediting.grow_selection, -1}
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
 
@@ -117,8 +117,8 @@ keys[not CURSES and 'aR' or 'mR'] = gui.find.replace_all
 -- Replace All is aa when find pane is focused (GTK only).
 keys[not CURSES and 'ai' or 'mi'] = gui.find.find_incremental
 -- Find in Files is ai when find pane is focused.
--- TODO: {gui.find.goto_file_in_list, true}
--- TODO: {gui.find.goto_file_in_list, false}
+-- TODO: {gui.find.goto_file_found, false, true}
+-- TODO: {gui.find.goto_file_found, false, false}
 keys.cg = Mediting.goto_line
 
 -- Tools.
@@ -126,8 +126,8 @@ keys.cc = {gui.command_entry.enter_mode, 'lua_command'}
 -- TODO: function() _M.textadept.menu.select_command() end
 keys[not CURSES and 'ag' or 'mg'] = Mtextadept.run.run
 keys[not CURSES and 'aG' or 'mG'] = Mtextadept.run.compile
-keys[not CURSES and 'a|' or 'm|'] = {gui.command_entry.enter_mode,
-                                     'filter_through'}
+-- TODO: {m_textadept.run.goto_error, false, true}
+-- TODO: {m_textadept.run.goto_error, false, false}
 -- Adeptsense.
 -- Complete symbol is 'c '.
 keys[not CURSES and 'a?' or 'm?'] = Mtextadept.adeptsense.show_apidoc
@@ -273,8 +273,7 @@ keys.lua_command = {
   ['\n'] = {gui.command_entry.finish_mode, gui.command_entry.execute_lua}
 }
 keys.filter_through = {
-  ['\n'] = {gui.command_entry.finish_mode,
-            Mtextadept.filter_through.filter_through},
+  ['\n'] = {gui.command_entry.finish_mode, Mediting.filter_through},
 }
 keys.find_incremental = {
   ['\n'] = gui.find.find_incremental_next,
