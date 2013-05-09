@@ -25,9 +25,8 @@ local function toggle_setting(setting, i)
   events.emit(events.UPDATE_UI) -- for updating statusbar
 end
 
-local keys, io, gui, buffer, view = keys, io, gui, buffer, view
-local Mtextadept, Mediting = _M.textadept, _M.textadept.editing
-local Mbookmarks, Msnippets = Mtextadept.bookmarks, Mtextadept.snippets
+local _M, keys, buffer, view = _M, keys, buffer, view
+local m_editing = _M.textadept.editing
 
 keys.LANGUAGE_MODULE_PREFIX = 'cl'
 
@@ -40,8 +39,8 @@ keys.co = buffer.save
 keys[not CURSES and 'cao' or 'cmo'] = buffer.save_as
 keys.cx = buffer.close
 keys[not CURSES and 'ax' or 'mx'] = io.close_all
--- TODO: Mtextadept.session.load
--- TODO: Mtextadept.session.save
+-- TODO: _M.textadept.session.load
+-- TODO: _M.textadept.session.save
 keys.cq = quit
 
 -- Edit.
@@ -59,49 +58,49 @@ keys.cu = buffer.paste
 keys[not CURSES and 'cad' or 'cmd'] = buffer.line_duplicate
 keys.del = buffer.clear
 keys.cw = function() -- delete word
-  Mediting.select_word()
+  m_editing.select_word()
   _G.buffer:delete_back()
 end
 keys[not CURSES and 'caa' or 'cma'] = buffer.select_all
-keys['c]'] = Mediting.match_brace
-keys[not CURSES and 'c ' or 'c@'] = Mediting.autocomplete_word
-keys[not CURSES and 'aw' or 'mw'] = Mediting.highlight_word
-keys[not CURSES and 'c/' or 'c_'] = Mediting.block_comment
-keys.ct = Mediting.transpose_chars
-keys.cj = Mediting.join_lines
+keys['c]'] = m_editing.match_brace
+keys[not CURSES and 'c ' or 'c@'] = m_editing.autocomplete_word
+keys[not CURSES and 'aw' or 'mw'] = m_editing.highlight_word
+keys[not CURSES and 'c/' or 'c_'] = m_editing.block_comment
+keys.ct = m_editing.transpose_chars
+keys.cj = m_editing.join_lines
 keys[not CURSES and 'a|' or 'm|'] = {gui.command_entry.enter_mode,
                                      'filter_through'}
 -- Select.
-keys[not CURSES and 'ca]' or 'cm]'] = {Mediting.match_brace, 'select'}
-keys[not CURSES and 'a>' or 'm>'] = {Mediting.select_enclosed, '>', '<'}
--- TODO: {Mediting.select_enclosed, '<', '>'}
-keys[not CURSES and 'a"' or 'm"'] = {Mediting.select_enclosed, '"', '"'}
-keys[not CURSES and "a'" or "m'"] = {Mediting.select_enclosed, "'", "'"}
-keys[not CURSES and 'a)' or 'm)'] = {Mediting.select_enclosed, '(', ')'}
-keys[not CURSES and 'a]' or 'm]'] = {Mediting.select_enclosed, '[', ']'}
-keys[not CURSES and 'a}' or 'm}'] = {Mediting.select_enclosed, '{', '}'}
--- TODO: any_char_mt(Mediting.select_enclosed)
-keys[not CURSES and 'caw' or 'cmw'] = Mediting.select_word
-keys[not CURSES and 'cae' or 'cme'] = Mediting.select_line
-keys[not CURSES and 'caq' or 'cmq'] = Mediting.select_paragraph
-keys.cai = Mediting.select_indented_block -- GTK only
+keys[not CURSES and 'ca]' or 'cm]'] = {m_editing.match_brace, 'select'}
+keys[not CURSES and 'a>' or 'm>'] = {m_editing.select_enclosed, '>', '<'}
+-- TODO: {m_editing.select_enclosed, '<', '>'}
+keys[not CURSES and 'a"' or 'm"'] = {m_editing.select_enclosed, '"', '"'}
+keys[not CURSES and "a'" or "m'"] = {m_editing.select_enclosed, "'", "'"}
+keys[not CURSES and 'a)' or 'm)'] = {m_editing.select_enclosed, '(', ')'}
+keys[not CURSES and 'a]' or 'm]'] = {m_editing.select_enclosed, '[', ']'}
+keys[not CURSES and 'a}' or 'm}'] = {m_editing.select_enclosed, '{', '}'}
+-- TODO: any_char_mt(m_editing.select_enclosed)
+keys[not CURSES and 'caw' or 'cmw'] = m_editing.select_word
+keys[not CURSES and 'cae' or 'cme'] = m_editing.select_line
+keys[not CURSES and 'caq' or 'cmq'] = m_editing.select_paragraph
+keys.cai = m_editing.select_indented_block -- GTK only
 -- Selection.
 -- TODO: buffer.upper_case
 -- TODO: buffer.lower_case
 keys[not CURSES and 'a<' or 'm<'] = function() -- enclose as XML tags
-  Mediting.enclose('<', '>')
+  m_editing.enclose('<', '>')
   local buffer = _G.buffer
   local pos = buffer.current_pos
   while buffer.char_at[pos - 1] ~= 60 do pos = pos - 1 end -- '<'
   buffer:insert_text(-1, '</'..buffer:text_range(pos, buffer.current_pos))
 end
-keys[not CURSES and 'a/' or 'm/'] = {Mediting.enclose, '<', ' />'}
-keys[not CURSES and 'aQ' or 'mQ'] = {Mediting.enclose, '"', '"'}
-keys[not CURSES and 'aq' or 'mq'] = {Mediting.enclose, "'", "'"}
-keys[not CURSES and 'a(' or 'm('] = {Mediting.enclose, '(', ')'}
-keys[not CURSES and 'a[' or 'm['] = {Mediting.enclose, '[', ']'}
-keys[not CURSES and 'a{' or 'm{'] = {Mediting.enclose, '{', '}'}
-keys[not CURSES and 'a*' or 'm*'] = any_char_mt(Mediting.enclose)
+keys[not CURSES and 'a/' or 'm/'] = {m_editing.enclose, '<', ' />'}
+keys[not CURSES and 'aQ' or 'mQ'] = {m_editing.enclose, '"', '"'}
+keys[not CURSES and 'aq' or 'mq'] = {m_editing.enclose, "'", "'"}
+keys[not CURSES and 'a(' or 'm('] = {m_editing.enclose, '(', ')'}
+keys[not CURSES and 'a[' or 'm['] = {m_editing.enclose, '[', ']'}
+keys[not CURSES and 'a{' or 'm{'] = {m_editing.enclose, '{', '}'}
+keys[not CURSES and 'a*' or 'm*'] = any_char_mt(m_editing.enclose)
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
 
@@ -119,29 +118,29 @@ keys[not CURSES and 'ai' or 'mi'] = gui.find.find_incremental
 -- Find in Files is ai when find pane is focused.
 -- TODO: {gui.find.goto_file_found, false, true}
 -- TODO: {gui.find.goto_file_found, false, false}
-keys.cg = Mediting.goto_line
+keys.cg = m_editing.goto_line
 
 -- Tools.
 keys.cc = {gui.command_entry.enter_mode, 'lua_command'}
 -- TODO: function() _M.textadept.menu.select_command() end
-keys[not CURSES and 'ag' or 'mg'] = Mtextadept.run.run
-keys[not CURSES and 'aG' or 'mG'] = Mtextadept.run.compile
+keys[not CURSES and 'ag' or 'mg'] = _M.textadept.run.run
+keys[not CURSES and 'aG' or 'mG'] = _M.textadept.run.compile
 -- TODO: {m_textadept.run.goto_error, false, true}
 -- TODO: {m_textadept.run.goto_error, false, false}
 -- Adeptsense.
 -- Complete symbol is 'c '.
-keys[not CURSES and 'a?' or 'm?'] = Mtextadept.adeptsense.show_apidoc
+keys[not CURSES and 'a?' or 'm?'] = _M.textadept.adeptsense.show_apidoc
 -- Snippets.
-keys['\t'] = Msnippets._insert
-keys['s\t'] = Msnippets._previous
--- TODO: Msnippets._cancel_current
--- TODO: Msnippets._select
+keys['\t'] = _M.textadept.snippets._insert
+keys['s\t'] = _M.textadept.snippets._previous
+-- TODO: _M.textadept.snippets._cancel_current
+-- TODO: _M.textadept.snippets._select
 -- Bookmarks.
-keys[not CURSES and 'aM' or 'mM'] = Mbookmarks.toggle
--- TODO: Mbookmarks.clear
-keys[not CURSES and 'aN' or 'mN'] = Mbookmarks.goto_next
-keys[not CURSES and 'aP' or 'mP'] = Mbookmarks.goto_prev
-keys.cam = Mbookmarks.goto_bookmark -- GTK only
+keys[not CURSES and 'aM' or 'mM'] = _M.textadept.bookmarks.toggle
+-- TODO: _M.textadept.bookmarks.clear
+keys[not CURSES and 'aN' or 'mN'] = _M.textadept.bookmarks.goto_next
+keys[not CURSES and 'aP' or 'mP'] = _M.textadept.bookmarks.goto_prev
+keys.cam = _M.textadept.bookmarks.goto_bookmark -- GTK only
 -- Snapopen.
 keys[not CURSES and 'cau' or 'cmu'] = {io.snapopen, _USERHOME}
 -- Miscellaneous.
@@ -160,10 +159,10 @@ keys[not CURSES and 'ap' or 'mp'] = {view.goto_buffer, view, -1, true}
 keys[not CURSES and 'cab' or 'cmb'] = gui.switch_buffer
 -- Indentation.
 keys[not CURSES and 'at' or 'mt'] = {toggle_setting, 'use_tabs'}
-keys[not CURSES and 'aT' or 'mT'] = Mediting.convert_indentation
+keys[not CURSES and 'aT' or 'mT'] = m_editing.convert_indentation
 -- EOL Mode.
 -- Encoding.
-keys[not CURSES and 'cal' or 'cml'] = Mtextadept.mime_types.select_lexer
+keys[not CURSES and 'cal' or 'cml'] = _M.textadept.mime_types.select_lexer
 keys.f5 = {buffer.colourise, buffer, 0, -1}
 
 -- Views.
@@ -273,19 +272,23 @@ keys.lua_command = {
   ['\n'] = {gui.command_entry.finish_mode, gui.command_entry.execute_lua}
 }
 keys.filter_through = {
-  ['\n'] = {gui.command_entry.finish_mode, Mediting.filter_through},
+  ['\n'] = {gui.command_entry.finish_mode, m_editing.filter_through},
 }
 keys.find_incremental = {
-  ['\n'] = gui.find.find_incremental_next,
-  ['cr'] = gui.find.find_incremental_prev,
+  ['\n'] = function()
+    gui.find.find_incremental(gui.command_entry.entry_text, true, true)
+  end,
+  ['cr'] = function()
+    gui.find.find_incremental(gui.command_entry.entry_text, false, true)
+  end,
   ['\b'] = function()
-    gui.find.find_incremental(gui.command_entry.entry_text:sub(1, -2))
+    gui.find.find_incremental(gui.command_entry.entry_text:sub(1, -2), true)
     return false -- propagate
   end
 }
 setmetatable(keys.find_incremental, {__index = function(t, k)
                if #k > 1 and k:find('^[cams]*.+$') then return end
-               gui.find.find_incremental(gui.command_entry.entry_text..k)
+               gui.find.find_incremental(gui.command_entry.entry_text..k, true)
              end})
 
 return {utils = {}} -- so testing menu does not error
