@@ -11,7 +11,7 @@ module('_M.textadept.keys')]]
 
 -- Utility functions.
 local function any_char_mt(f)
-  return setmetatable({['\0'] = {}}, {__index = function(t, k)
+  return setmetatable({}, {__index = function(t, k)
                         if #k == 1 then return {f, k, k} end
                       end})
 end

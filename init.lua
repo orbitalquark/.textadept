@@ -1,4 +1,6 @@
-_M.textadept = require 'textadept'
+-- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
+
+if not CURSES then gui.set_theme('dark') end
 
 _M.file_browser = require 'file_browser'
 keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
