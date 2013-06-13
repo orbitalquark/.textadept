@@ -1,7 +1,7 @@
 
 function _M.java.set_buffer_properties()
   buffer.use_tabs = true
-  _M.textadept.editing.STRIP_WHITESPACE_ON_SAVE = false
+  _M.textadept.editing.STRIP_TRAILING_SPACES = false
 end
 
 local e = _M.textadept.editing
