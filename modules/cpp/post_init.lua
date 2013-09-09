@@ -1,5 +1,5 @@
 
-local e = _M.textadept.editing
+local e = textadept.editing
 -- Indent on 'Enter' when between auto-paired '{}'.
 events.connect(events.CHAR_ADDED, function(ch)
   if buffer:get_lexer() ~= 'cpp' or ch ~= 10 or not e.AUTOINDENT then return end

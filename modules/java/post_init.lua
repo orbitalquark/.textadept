@@ -1,10 +1,10 @@
 
 function _M.java.set_buffer_properties()
   buffer.use_tabs = true
-  _M.textadept.editing.STRIP_TRAILING_SPACES = false
+  textadept.editing.STRIP_TRAILING_SPACES = false
 end
 
-local e = _M.textadept.editing
+local e = textadept.editing
 -- Indent on 'Enter' when between auto-paired '{}'.
 events.connect(events.CHAR_ADDED, function(ch)
   if buffer:get_lexer() == 'java' and ch == 10 and e.AUTOINDENT then

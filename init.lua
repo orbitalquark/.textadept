@@ -1,6 +1,6 @@
 -- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
-if not CURSES then gui.set_theme('dark') end
+if not CURSES then ui.set_theme('dark') end
 
 _M.file_browser = require 'file_browser'
 keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
@@ -11,3 +11,5 @@ keys[not CURSES and 'caj' or 'cmj'] = vc.snapopen_project
 keys[not CURSES and 'aj' or 'mj'] = vc.command
 keys[not CURSES and 'cah' or 'cmh'] = {vc.snapopen_project, _HOME..'/'}
 if CURSES then keys.cmg = keys.cmh end
+
+textadept.file_types.extensions.luadoc = 'lua'
