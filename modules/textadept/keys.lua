@@ -34,11 +34,11 @@ keys.LANGUAGE_MODULE_PREFIX = 'cl'
 keys[not CURSES and 'cac' or 'cmc'] = buffer.new
 keys.cr = io.open_file
 keys[not CURSES and 'car' or 'cmr'] = io.open_recent_file
--- TODO: buffer.reload
-keys.co = buffer.save
-keys[not CURSES and 'cao' or 'cmo'] = buffer.save_as
-keys.cx = buffer.close
-keys[not CURSES and 'ax' or 'mx'] = io.close_all
+-- TODO: io.reload_file
+keys.co = io.save_file
+keys[not CURSES and 'cao' or 'cmo'] = io.save_file_as
+keys.cx = io.close_buffer
+keys[not CURSES and 'ax' or 'mx'] = io.close_all_buffers
 -- TODO: textadept.session.load
 -- TODO: textadept.session.save
 keys.cq = quit
