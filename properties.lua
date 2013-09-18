@@ -1,16 +1,15 @@
 -- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 local buffer = buffer
-local c = _SCINTILLA.constants
 
 -- Multiple Selection and Virtual Space
 buffer.multiple_selection = true
 buffer.additional_selection_typing = true
---buffer.multi_paste = c.SC_MULTIPASTE_EACH
---buffer.virtual_space_options = c.SCVS_RECTANGULARSELECTION +
---                               c.SCVS_USERACCESSIBLE
-buffer.rectangular_selection_modifier = (WIN32 or OSX) and c.SCMOD_ALT or
-                                                           c.SCMOD_SUPER
+--buffer.multi_paste = buffer.MULTIPASTE_EACH
+--buffer.virtual_space_options = buffer.VS_RECTANGULARSELECTION +
+--                               buffer.VS_USERACCESSIBLE
+buffer.rectangular_selection_modifier = (WIN32 or OSX) and buffer.MOD_ALT or
+                                                           buffer.MOD_SUPER
 --buffer.additional_carets_blink = false
 --buffer.additional_carets_visible = false
 
@@ -26,7 +25,7 @@ buffer.v_scroll_bar = false
 --buffer.end_at_last_line = false
 
 -- Whitespace
---buffer.view_ws = c.SCWS_VISIBLEALWAYS
+--buffer.view_ws = buffer.WS_VISIBLEALWAYS
 --buffer.whitespace_size =
 --buffer.extra_ascent =
 --buffer.extra_descent =
@@ -39,30 +38,35 @@ buffer.v_scroll_bar = false
 buffer.caret_line_visible = not CURSES
 --buffer.caret_line_visible_always = true
 buffer.caret_period = 0
-buffer.caret_style = c.CARETSTYLE_BLOCK
+buffer.caret_style = buffer.CARETSTYLE_BLOCK
 --buffer.caret_width =
---buffer.caret_sticky = c.SC_CARETSTICKY_ON
+--buffer.caret_sticky = buffer.CARETSTICKY_ON
 
--- Line Number Margin.
-local width = 4 * buffer:text_width(c.STYLE_LINENUMBER, '9')
-buffer.margin_width_n[0] = width + (not CURSES and 4 or 0)
-
--- Marker Margin.
-buffer.margin_width_n[1] = not CURSES and 0 or 1
-
--- Fold Margin.
-buffer.margin_width_n[2] = not CURSES and 10 or 1
-buffer.margin_mask_n[2] = c.SC_MASK_FOLDERS
-buffer.margin_sensitive_n[2] = true
+-- Margins.
 --buffer.margin_left =
 --buffer.margin_right =
+-- Line Number Margin.
+local width = 4 * buffer:text_width(buffer.STYLE_LINENUMBER, '9')
+buffer.margin_width_n[0] = width + (not CURSES and 4 or 0)
+-- Marker Margin.
+buffer.margin_width_n[1] = not CURSES and 4 or 1
+buffer.margin_sensitive_n[1] = true
+buffer.margin_cursor_n[1] = buffer.CURSORARROW
+-- Fold Margin.
+buffer.margin_width_n[2] = not CURSES and 12 or 1
+buffer.margin_mask_n[2] = buffer.MASK_FOLDERS
+buffer.margin_sensitive_n[2] = true
+buffer.margin_cursor_n[2] = buffer.CURSORARROW
 
 -- Annotations.
-buffer.annotation_visible = c.ANNOTATION_BOXED
+buffer.annotation_visible = buffer.ANNOTATION_BOXED
 
 -- Other.
 buffer.buffered_draw = not CURSES and not OSX -- Quartz buffers drawing on OSX
 --buffer.two_phase_draw = false
+--buffer.word_chars =
+--buffer.whitespace_chars =
+--buffer.punctuation_chars =
 
 -- Tabs and Indentation Guides.
 -- Note: tab and indentation settings apply to individual buffers.
@@ -71,45 +75,90 @@ buffer.use_tabs = false
 --buffer.indent = 2
 buffer.tab_indents = true
 buffer.back_space_un_indents = true
-buffer.indentation_guides = c.SC_IV_LOOKBOTH
+buffer.indentation_guides = buffer.IV_LOOKBOTH
 
--- Fold Margin Markers.
+-- Margin Markers.
+local mark = not CURSES and buffer.MARK_FULLRECT or
+             buffer.MARK_CHARACTER + string.byte(' ')
+buffer:marker_define(textadept.bookmarks.MARK_BOOKMARK, mark)
+buffer:marker_define(textadept.run.MARK_ERROR, mark)
 if not CURSES then
-  buffer:marker_define(c.SC_MARKNUM_FOLDEROPEN, c.SC_MARK_ARROWDOWN)
-  buffer:marker_define(c.SC_MARKNUM_FOLDER, c.SC_MARK_ARROW)
-  buffer:marker_define(c.SC_MARKNUM_FOLDERSUB, c.SC_MARK_EMPTY)
-  buffer:marker_define(c.SC_MARKNUM_FOLDERTAIL, c.SC_MARK_EMPTY)
-  buffer:marker_define(c.SC_MARKNUM_FOLDEREND, c.SC_MARK_EMPTY)
-  buffer:marker_define(c.SC_MARKNUM_FOLDEROPENMID, c.SC_MARK_EMPTY)
-  buffer:marker_define(c.SC_MARKNUM_FOLDERMIDTAIL, c.SC_MARK_EMPTY)
+  -- Arrow Folding Symbols.
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPEN, buffer.MARK_ARROWDOWN)
+--  buffer:marker_define(buffer.MARKNUM_FOLDER, buffer.MARK_ARROW)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERSUB, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERTAIL, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEREND, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPENMID, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERMIDTAIL, buffer.MARK_EMPTY)
+  -- Plus/Minus Folding Symbols.
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPEN, buffer.MARK_MINUS)
+--  buffer:marker_define(buffer.MARKNUM_FOLDER, buffer.MARK_PLUS)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERSUB, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERTAIL, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEREND, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPENMID, buffer.MARK_EMPTY)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERMIDTAIL, buffer.MARK_EMPTY)
+  -- Circle Tree Folding Symbols.
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPEN, buffer.MARK_CIRCLEMINUS)
+--  buffer:marker_define(buffer.MARKNUM_FOLDER, buffer.MARK_CIRCLEPLUS)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERSUB, buffer.MARK_VLINE)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERTAIL, buffer.MARK_LCORNERCURVE)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEREND,
+--                       buffer.MARK_CIRCLEPLUSCONNECTED)
+--  buffer:marker_define(buffer.MARKNUM_FOLDEROPENMID,
+--                       buffer.MARK_CIRCLEMINUSCONNECTED)
+--  buffer:marker_define(buffer.MARKNUM_FOLDERMIDTAIL, buffer.MARK_TCORNERCURVE)
+  -- Box Tree Folding Symbols.
+  buffer:marker_define(buffer.MARKNUM_FOLDEROPEN, buffer.MARK_BOXMINUS)
+  buffer:marker_define(buffer.MARKNUM_FOLDER, buffer.MARK_BOXPLUS)
+  buffer:marker_define(buffer.MARKNUM_FOLDERSUB, buffer.MARK_VLINE)
+  buffer:marker_define(buffer.MARKNUM_FOLDERTAIL, buffer.MARK_LCORNER)
+  buffer:marker_define(buffer.MARKNUM_FOLDEREND, buffer.MARK_BOXPLUSCONNECTED)
+  buffer:marker_define(buffer.MARKNUM_FOLDEROPENMID,
+                       buffer.MARK_BOXMINUSCONNECTED)
+  buffer:marker_define(buffer.MARKNUM_FOLDERMIDTAIL, buffer.MARK_TCORNER)
+end
+--buffer:marker_enable_highlight(true)
+
+-- Indicators.
+buffer.indic_style[textadept.editing.INDIC_HIGHLIGHT] = buffer.INDIC_ROUNDBOX
+if not CURSES then
+  buffer.indic_under[textadept.editing.INDIC_HIGHLIGHT] = true
 end
 
 -- Autocompletion.
 --buffer.auto_c_cancel_at_start = false
+--buffer.auto_c_fill_ups = '('
 buffer.auto_c_choose_single = true
+--buffer.auto_c_ignore_case = true
+--buffer.auto_c_case_insensitive_behaviour =
+--  buffer.CASEINSENSITIVEBEHAVIOUR_IGNORECASE
 --buffer.auto_c_auto_hide = false
+--buffer.auto_c_drop_rest_of_word = true
 --buffer.auto_c_max_height =
 --buffer.auto_c_max_width =
 
 -- Call Tips.
 buffer.call_tip_use_style = buffer.tab_width *
-                            buffer:text_width(c.STYLE_CALLTIP, ' ')
+                            buffer:text_width(buffer.STYLE_CALLTIP, ' ')
+--buffer.call_tip_position = true
 
 -- Folding.
 buffer.property['fold'] = '1'
-buffer.property['fold.by.indentation'] = '1'
+buffer.property['fold.by.indentation'] = '0'
 buffer.property['fold.line.comments'] = '0'
-buffer.fold_flags = not CURSES and c.SC_FOLDFLAG_LINEAFTER_CONTRACTED or 0
-buffer.automatic_fold = c.SC_AUTOMATICFOLD_SHOW + c.SC_AUTOMATICFOLD_CLICK +
-                        c.SC_AUTOMATICFOLD_CHANGE
+buffer.automatic_fold = buffer.AUTOMATICFOLD_SHOW + buffer.AUTOMATICFOLD_CLICK +
+                        buffer.AUTOMATICFOLD_CHANGE
+buffer.fold_flags = not CURSES and buffer.FOLDFLAG_LINEAFTER_CONTRACTED or 0
 
 -- Line Wrapping.
---buffer.wrap_mode = c.SC_WRAP_WORD
---buffer.wrap_visual_flags = c.SC_WRAPVISUALFLAG_MARGIN
---buffer.wrap_visual_flags_location = c.SC_WRAPVISUALFLAGLOC_END_BY_TEXT
---buffer.wrap_indent_mode = c.SC_WRAPINDENT_SAME
+--buffer.wrap_mode = buffer.WRAP_WORD
+--buffer.wrap_visual_flags = buffer.WRAPVISUALFLAG_MARGIN
+--buffer.wrap_visual_flags_location = buffer.WRAPVISUALFLAGLOC_END_BY_TEXT
+--buffer.wrap_indent_mode = buffer.WRAPINDENT_SAME
 --buffer.wrap_start_indent =
 
 -- Long Lines.
-buffer.edge_mode = not CURSES and c.EDGE_LINE or c.EDGE_BACKGROUND
+buffer.edge_mode = not CURSES and buffer.EDGE_LINE or buffer.EDGE_BACKGROUND
 buffer.edge_column = 80
