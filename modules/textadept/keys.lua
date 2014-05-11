@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~
 -- ca:        ~~          t    y
--- a:  aA  cC D           JkKlLm   oO          uU     X   Z_           +  - =
+-- a:  aA  cC              kKlLm   oO          uU         Z_           +  - =
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -125,6 +125,8 @@ keys.cc = {ui.command_entry.enter_mode, 'lua_command'}
 -- TODO: function() textadept.menu.select_command() end
 keys[not CURSES and 'ag' or 'mg'] = textadept.run.run
 keys[not CURSES and 'aG' or 'mG'] = textadept.run.compile
+keys[not CURSES and 'aJ' or 'mJ'] = textadept.run.build
+keys.aX = textadept.run.stop
 -- TODO: {m_textadept.run.goto_error, false, true}
 -- TODO: {m_textadept.run.goto_error, false, false}
 -- Adeptsense.
@@ -143,15 +145,18 @@ keys[not CURSES and 'aP' or 'mP'] = {textadept.bookmarks.goto_mark, false}
 keys.cam = textadept.bookmarks.goto_mark -- GTK only
 -- Snapopen.
 keys[not CURSES and 'cau' or 'cmu'] = {io.snapopen, _USERHOME}
+keys[not CURSES and 'cah' or 'cmh'] = {io.snapopen, _HOME}
+if CURSES then keys.cmg = keys.cmh end
+keys[not CURSES and 'caj' or 'cmj'] = io.snapopen
 -- Miscellaneous.
--- TODO: function() -- show style
---   local buffer = _G.buffer
---   local style = buffer.style_at[buffer.current_pos]
---   local text = string.format("%s %s\n%s %s (%d)", _L['Lexer'],
---                              buffer:get_lexer(true), _L['Style'],
---                              buffer:get_style_name(style), style)
---   buffer:call_tip_show(buffer.current_pos, text)
--- end
+keys['a='] = function() -- show style
+  local buffer = _G.buffer
+  local style = buffer.style_at[buffer.current_pos]
+  local text = string.format("%s %s\n%s %s (%d)", _L['Lexer'],
+                             buffer:get_lexer(true), _L['Style'],
+                             buffer.style_name[style], style)
+  buffer:call_tip_show(buffer.current_pos, text)
+end
 
 -- Buffers.
 keys[not CURSES and 'an' or 'mn'] = {view.goto_buffer, view, 1, true}
@@ -166,11 +171,14 @@ keys[not CURSES and 'cal' or 'cml'] = textadept.file_types.select_lexer
 keys.f5 = {buffer.colourise, buffer, 0, -1}
 
 -- Views.
-keys.can = {ui.goto_view, 1, true}
-keys.cap = {ui.goto_view, -1, true}
-keys.cas = {view.split, view} -- horizontal
-keys.cav = {view.split, view, true} -- vertical
-keys.cax = function() _G.view:unsplit() return true end
+keys[not CURSES and 'can' or 'cmn'] = {ui.goto_view, 1, true}
+keys[not CURSES and 'cap' or 'cmp'] = {ui.goto_view, -1, true}
+keys[not CURSES and 'cas' or 'cms'] = {view.split, view} -- horizontal
+keys[not CURSES and 'cav' or 'cmv'] = {view.split, view, true} -- vertical
+keys[not CURSES and 'cax' or 'cmx'] = function()
+  _G.view:unsplit()
+  return true -- always return true, even if the unsplit operation failed
+end
 keys.caX = function() while _G.view:unsplit() do end end -- GTK only
 -- TODO: function() _G.view.size = _G.view.size + 10 end
 -- TODO: function() _G.view.size = _G.view.size - 10 end
@@ -262,9 +270,32 @@ keys['az'] = function()
   if (_BUFFERS[last_buffer]) then _G.view:goto_buffer(_BUFFERS[last_buffer]) end
 end
 
+-- Prompt for project root command to run (e.g. "hg status").
+keys[not CURSES and 'aj' or 'mj'] = function()
+  local root = io.get_project_root()
+  if not root then return end
+  local button, command = ui.dialogs.standard_inputbox{
+    title = _L['Command'], informative_text = root
+  }
+  if button == 1 then spawn(command, root, ui.print, ui.print) end
+end
+
+-- Mercurial diff of current file.
+keys[not CURSES and 'aD' or 'mD'] = function()
+  local buffer = _G.buffer
+  local root = io.get_project_root()
+  if not buffer.filename or not root then return end
+  local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
+  local diff = p:read('*a')
+  p:close()
+  buffer = buffer.new()
+  buffer:set_lexer('diff')
+  buffer:add_text(diff)
+  buffer:goto_pos(0)
+  buffer:set_save_point()
+end
+
 --keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
---keys[not CURSES and 'caj' or 'cmj'] = _M.version_control.snapopen_project
---keys[not CURSES and 'aj' or 'mj'] = _M.version_control.command
 
 -- Modes.
 keys.lua_command = {
