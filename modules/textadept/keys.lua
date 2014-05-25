@@ -63,7 +63,7 @@ keys.cw = function() -- delete word
 end
 keys[not CURSES and 'caa' or 'cma'] = buffer.select_all
 keys['c]'] = editing.match_brace
-keys[not CURSES and 'c ' or 'c@'] = editing.autocomplete_word
+keys[not CURSES and 'c ' or 'c@'] = {editing.autocomplete, 'word'}
 keys[not CURSES and 'aw' or 'mw'] = editing.highlight_word
 keys[not CURSES and 'c/' or 'c_'] = editing.block_comment
 keys.ct = editing.transpose_chars
@@ -129,9 +129,6 @@ keys[not CURSES and 'aJ' or 'mJ'] = textadept.run.build
 keys.aX = textadept.run.stop
 -- TODO: {m_textadept.run.goto_error, false, true}
 -- TODO: {m_textadept.run.goto_error, false, false}
--- Adeptsense.
--- Complete symbol is 'c '.
-keys[not CURSES and 'a?' or 'm?'] = textadept.adeptsense.show_apidoc
 -- Snippets.
 keys['\t'] = textadept.snippets._insert
 keys['s\t'] = textadept.snippets._previous
@@ -148,7 +145,9 @@ keys[not CURSES and 'cau' or 'cmu'] = {io.snapopen, _USERHOME}
 keys[not CURSES and 'cah' or 'cmh'] = {io.snapopen, _HOME}
 if CURSES then keys.cmg = keys.cmh end
 keys[not CURSES and 'caj' or 'cmj'] = io.snapopen
--- Miscellaneous.
+-- Other.
+-- Complete symbol is 'c '.
+keys[not CURSES and 'a?' or 'm?'] = textadept.editing.show_documentation
 keys['a='] = function() -- show style
   local buffer = _G.buffer
   local style = buffer.style_at[buffer.current_pos]
@@ -253,11 +252,9 @@ keys.cm = buffer.new_line
 
 -- Language modules.
 events.connect(events.LEXER_LOADED, function(lang)
-  if not _M[lang] or not _M[lang].sense then return end
+  if not keys[lang] then return end
   keys[lang][not CURSES and 'c ' or 'c@'] = function()
-    local ret = _M[lang].sense:complete()
-    if not _G.buffer:auto_c_active() then return false end
-    return ret
+    if not textadept.editing.autocomplete(lang) then return false end
   end
 end)
 

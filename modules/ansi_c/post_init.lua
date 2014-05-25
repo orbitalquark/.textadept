@@ -14,5 +14,3 @@ events.connect(events.CHAR_ADDED, function(ch)
     end
   end
 end)
-
-keys.ansi_c.cl.g = textadept.adeptsense.goto_ctag
