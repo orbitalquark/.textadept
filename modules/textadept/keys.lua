@@ -83,7 +83,6 @@ keys[not CURSES and 'a}' or 'm}'] = {editing.select_enclosed, '{', '}'}
 keys[not CURSES and 'caw' or 'cmw'] = editing.select_word
 keys[not CURSES and 'cae' or 'cme'] = editing.select_line
 keys[not CURSES and 'caq' or 'cmq'] = editing.select_paragraph
-keys.cai = editing.select_indented_block -- GTK only
 -- Selection.
 -- TODO: buffer.upper_case
 -- TODO: buffer.lower_case
@@ -249,6 +248,7 @@ keys.cm = buffer.new_line
 -- Miscellaneous not in standard menu.
 -- TODO: {events.emit, events.CALL_TIP_CLICK, 1}
 -- TODO: {events.emit, events.CALL_TIP_CLICK, 2}
+keys.f10 = function() ui.maximized = not ui.maximized end
 
 -- Language modules.
 events.connect(events.LEXER_LOADED, function(lang)
@@ -295,15 +295,12 @@ end
 --keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
 
 -- Modes.
-keys.lua_command = {
-  ['\t'] = ui.command_entry.complete_lua,
-  ['\n'] = {ui.command_entry.finish_mode, ui.command_entry.execute_lua}
-}
 keys.filter_through = {
   ['\n'] = {ui.command_entry.finish_mode, editing.filter_through},
 }
 keys.find_incremental = {
   ['\n'] = function()
+    ui.find.find_entry_text = ui.command_entry.entry_text -- save
     ui.find.find_incremental(ui.command_entry.entry_text, true, true)
   end,
   ['cr'] = function()
