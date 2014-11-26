@@ -344,4 +344,19 @@ setmetatable(keys.find_incremental, {__index = function(t, k)
                ui.find.find_incremental(ui.command_entry:get_text()..k, true)
              end})
 
+-- Keys for the command entry.
+local ekeys = ui.command_entry.editing_keys.__index
+ekeys.cf = {buffer.char_right, ui.command_entry}
+ekeys.cb = {buffer.char_left, ui.command_entry}
+ekeys.cn = {buffer.line_down, ui.command_entry}
+ekeys.cp = {buffer.line_up, ui.command_entry}
+ekeys.ca = {buffer.vc_home, ui.command_entry}
+ekeys.ce = {buffer.line_end, ui.command_entry}
+ekeys.cv = {buffer.page_down, ui.command_entry}
+ekeys.cy = {buffer.page_up, ui.command_entry}
+ekeys.ch = {buffer.delete_back, ui.command_entry}
+ekeys.cd = {buffer.clear, ui.command_entry}
+ekeys.cu = {buffer.paste, ui.command_entry}
+ekeys.caa = {buffer.select_all, ui.command_entry}
+
 return {utils = {}} -- so testing menu does not error
