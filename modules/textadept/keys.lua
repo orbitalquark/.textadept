@@ -32,7 +32,7 @@ keys.LANGUAGE_MODULE_PREFIX = 'cl'
 
 -- File.
 keys[not CURSES and 'cac' or 'cmc'] = buffer.new
-keys.cr = io.open_file
+keys.cr = {ui.command_entry.enter_mode, 'open_file'}
 keys[not CURSES and 'car' or 'cmr'] = io.open_recent_file
 -- TODO: io.reload_file
 keys.co = io.save_file
@@ -69,7 +69,7 @@ keys[not CURSES and 'c/' or 'c_'] = editing.block_comment
 keys.ct = editing.transpose_chars
 keys.cj = editing.join_lines
 keys[not CURSES and 'a|' or 'm|'] = {ui.command_entry.enter_mode,
-                                     'filter_through'}
+                                     'filter_through', 'bash'}
 -- Select.
 keys[not CURSES and 'ca]' or 'cm]'] = {editing.match_brace, 'select'}
 keys[not CURSES and 'a>' or 'm>'] = {editing.select_enclosed, '>', '<'}
@@ -120,7 +120,7 @@ keys[not CURSES and 'ai' or 'mi'] = ui.find.find_incremental
 keys.cg = editing.goto_line
 
 -- Tools.
-keys.cc = {ui.command_entry.enter_mode, 'lua_command'}
+keys.cc = {ui.command_entry.enter_mode, 'lua_command', 'lua'}
 -- TODO: function() textadept.menu.select_command() end
 keys[not CURSES and 'ag' or 'mg'] = textadept.run.run
 keys[not CURSES and 'aG' or 'mG'] = textadept.run.compile
@@ -264,7 +264,7 @@ events.connect(events.BUFFER_BEFORE_SWITCH, function()
   last_buffer = _G.buffer
 end)
 keys['az'] = function()
-  if (_BUFFERS[last_buffer]) then _G.view:goto_buffer(_BUFFERS[last_buffer]) end
+  if _BUFFERS[last_buffer] then _G.view:goto_buffer(_BUFFERS[last_buffer]) end
 end
 
 -- Prompt for project root command to run (e.g. "hg status").
@@ -295,25 +295,53 @@ end
 --keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
 
 -- Modes.
+keys.open_file = {
+  ['\n'] = {ui.command_entry.finish_mode,
+            function(file) io.open_file(file ~= '' and file) end},
+  ['\t'] = function()
+    if not ui.command_entry:auto_c_active() then
+      -- Autocomplete the filename in the command entry
+      local files = {}
+      local dir, part = ui.command_entry:get_text():match('^(.-)([^/\\]*)$')
+      if dir == '' then dir = lfs.currentdir() end
+      if lfs.attributes(dir, 'mode') == 'directory' then
+        -- Iterate over directory, finding file matches.
+        part = '^'..part
+        lfs.dir_foreach(dir, function(file)
+          file = file:match('[^/\\]+[/\\]?$')
+          if file:find(part) then files[#files + 1] = file end
+        end, nil, false, 0, true)
+        table.sort(files)
+        keys.open_file.files = files -- store for tabbing through
+        ui.command_entry:auto_c_show(#part - 1, table.concat(files, ' '))
+      end
+    else
+      -- Cycle through filenames.
+      local i = ui.command_entry.auto_c_current + 2
+      if i > #keys.open_file.files then i = 1 end
+      ui.command_entry:auto_c_select(keys.open_file.files[i])
+    end
+  end
+}
 keys.filter_through = {
   ['\n'] = {ui.command_entry.finish_mode, editing.filter_through},
 }
 keys.find_incremental = {
   ['\n'] = function()
-    ui.find.find_entry_text = ui.command_entry.entry_text -- save
-    ui.find.find_incremental(ui.command_entry.entry_text, true, true)
+    ui.find.find_entry_text = ui.command_entry:get_text() -- save
+    ui.find.find_incremental(ui.command_entry:get_text(), true, true)
   end,
   ['cr'] = function()
-    ui.find.find_incremental(ui.command_entry.entry_text, false, true)
+    ui.find.find_incremental(ui.command_entry:get_text(), false, true)
   end,
   ['\b'] = function()
-    ui.find.find_incremental(ui.command_entry.entry_text:sub(1, -2), true)
+    ui.find.find_incremental(ui.command_entry:get_text():sub(1, -2), true)
     return false -- propagate
   end
 }
 setmetatable(keys.find_incremental, {__index = function(t, k)
                if #k > 1 and k:find('^[cams]*.+$') then return end
-               ui.find.find_incremental(ui.command_entry.entry_text..k, true)
+               ui.find.find_incremental(ui.command_entry:get_text()..k, true)
              end})
 
 return {utils = {}} -- so testing menu does not error
