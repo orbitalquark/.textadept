@@ -296,14 +296,20 @@ end
 
 -- Modes.
 keys.open_file = {
-  ['\n'] = {ui.command_entry.finish_mode,
-            function(file) io.open_file(file ~= '' and file) end},
+  ['\n'] = {ui.command_entry.finish_mode, function(file)
+    if not file:find('^%a?:?[/\\]') then
+      file = (_G.buffer.filename or lfs.currentdir()):match('^.+[/\\]')..file
+    end
+    io.open_file(file ~= '' and file)
+  end},
   ['\t'] = function()
     if not ui.command_entry:auto_c_active() then
       -- Autocomplete the filename in the command entry
       local files = {}
       local dir, part = ui.command_entry:get_text():match('^(.-)([^/\\]*)$')
-      if dir == '' then dir = lfs.currentdir() end
+      if dir == '' then
+        dir = (_G.buffer.filename or lfs.currentdir()):match('^.+[/\\]')
+      end
       if lfs.attributes(dir, 'mode') == 'directory' then
         -- Iterate over directory, finding file matches.
         part = '^'..part
@@ -343,6 +349,12 @@ setmetatable(keys.find_incremental, {__index = function(t, k)
                if #k > 1 and k:find('^[cams]*.+$') then return end
                ui.find.find_incremental(ui.command_entry:get_text()..k, true)
              end})
+keys.lua_command['a?'] = function()
+  local orig_buffer = _G.buffer
+  _G.buffer = ui.command_entry
+  textadept.editing.show_documentation()
+  _G.buffer = orig_buffer
+end
 
 -- Keys for the command entry.
 local ekeys = ui.command_entry.editing_keys.__index
