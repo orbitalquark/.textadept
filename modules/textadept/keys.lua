@@ -7,7 +7,15 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~
 -- ca:        ~~          t    y
--- a:  aA  cC              kKlLm   oO          uU         Z_           +  - =
+-- a:  aA   C               K Lm   oO          uU         Z_           +  -
+
+-- UTF-8 handling tables.
+local utf8_lengths = { -- {max code point, UTF-8 length}
+  {0x80, 1}, {0x800, 2}, {0x10000, 3}, {0x200000, 4}, {0x4000000, 5}
+}
+local lead_bytes = { -- [UTF-8 length] = {UTF-8 lead bits, remaining mask}
+  {0, 0x7F}, {0xC0, 0x1F}, {0xE0, 0x0F}, {0xF0, 0x7}, {0xF8, 0x3}, {0xFC, 0x1}
+}
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -44,9 +52,9 @@ keys[not CURSES and 'ax' or 'mx'] = io.close_all_buffers
 keys.cq = quit
 
 -- Edit.
-keys.cz = buffer.undo
+keys[not CURSES and 'cz' or 'mz'] = buffer.undo
 keys.cZ = buffer.redo -- GTK only
-keys[not CURSES and 'caz' or 'cmz'] = keys.cZ
+keys[not CURSES and 'caz' or 'cmz'] = buffer.redo
 keys.ck = function()
   local buffer = _G.buffer
   if #buffer:get_sel_text() == 0 then buffer:line_end_extend() end
@@ -149,10 +157,18 @@ keys[not CURSES and 'caj' or 'cmj'] = io.snapopen
 keys[not CURSES and 'a?' or 'm?'] = textadept.editing.show_documentation
 keys['a='] = function() -- show style
   local buffer = _G.buffer
-  local style = buffer.style_at[buffer.current_pos]
-  local text = string.format("%s %s\n%s %s (%d)", _L['Lexer'],
-                             buffer:get_lexer(true), _L['Style'],
-                             buffer.style_name[style], style)
+  local pos = buffer.current_pos
+  local char = buffer:text_range(pos, buffer:position_after(pos))
+  if char == '' then char = '\0' end
+  local code = bit32.band(char:byte(), lead_bytes[#char][2])
+  for i = 2, #char do
+    code = bit32.bor(bit32.lshift(code, 6), bit32.band(char:byte(i), 0x3F))
+  end
+  local bytes = string.rep(' 0x%02X', #char):format(char:byte(1, #char))
+  local style = buffer.style_at[pos]
+  local text = string.format("'%s' (U+%04X:%s)\n%s %s\n%s %s (%d)", char, code,
+                             bytes, _L['Lexer'], buffer:get_lexer(true),
+                             _L['Style'], buffer.style_name[style], style)
   buffer:call_tip_show(buffer.current_pos, text)
 end
 
@@ -263,7 +279,7 @@ local last_buffer = buffer
 events.connect(events.BUFFER_BEFORE_SWITCH, function()
   last_buffer = _G.buffer
 end)
-keys['az'] = function()
+keys[not CURSES and 'al' or 'ml'] = function()
   if _BUFFERS[last_buffer] then _G.view:goto_buffer(_BUFFERS[last_buffer]) end
 end
 
@@ -293,12 +309,39 @@ keys[not CURSES and 'aD' or 'mD'] = function()
 end
 
 --keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
+--keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
+--keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
+--keys[not CURSES and 'a.' or 'm.'] = {_M.ctags.goto_tag, nil, false} -- forward
+--keys[not CURSES and 'ac' or 'mc'] = {textadept.editing.autocomplete, 'ctag'}
+
+-- Autocomplete word from dictionary.
+textadept.editing.autocompleters.dict = function()
+  local completions = {}
+  local s = _G.buffer:word_start_position(_G.buffer.current_pos, true)
+  local e = _G.buffer:word_end_position(_G.buffer.current_pos, true)
+  local word = _G.buffer:text_range(s, e)
+  local c, capitalized = word:sub(1, 1), word:find('^[A-Z]')
+  local patt = capitalized and '^['..c:upper()..c:lower()..']'..word:sub(2) or
+               '^'..word
+  for line in io.lines('/usr/share/dict/words') do
+    if line:find(patt) then
+      if capitalized and not line:find('^[A-Z]') then
+        line = line:sub(1, 1):upper()..line:sub(2) -- capitalize
+      end
+      completions[#completions + 1] = line
+    end
+  end
+  return #word, completions
+end
+keys[not CURSES and 'ak' or 'mk'] = {textadept.editing.autocomplete, 'dict'}
 
 -- Modes.
 keys.open_file = {
   ['\n'] = {ui.command_entry.finish_mode, function(file)
-    if not file:find('^%a?:?[/\\]') then
-      file = (_G.buffer.filename or lfs.currentdir()):match('^.+[/\\]')..file
+    if file ~= '' and not file:find('^%a?:?[/\\]') then
+      -- Convert relative path into an absolute one.
+      file = (_G.buffer.filename or
+              lfs.currentdir()..'/'):match('^.+[/\\]')..file
     end
     io.open_file(file ~= '' and file)
   end},
@@ -306,10 +349,13 @@ keys.open_file = {
     if not ui.command_entry:auto_c_active() then
       -- Autocomplete the filename in the command entry
       local files = {}
-      local dir, part = ui.command_entry:get_text():match('^(.-)([^/\\]*)$')
-      if dir == '' then
-        dir = (_G.buffer.filename or lfs.currentdir()):match('^.+[/\\]')
+      local path = ui.command_entry:get_text()
+      if not path:find('^a?:?[/\\]') then
+        -- Convert relative path into an absolute one.
+        path = (_G.buffer.filename or
+                lfs.currentdir()..'/'):match('^.+[/\\]')..path
       end
+      local dir, part = path:match('^(.-)([^/\\]*)$')
       if lfs.attributes(dir, 'mode') == 'directory' then
         -- Iterate over directory, finding file matches.
         part = '^'..part
@@ -354,6 +400,27 @@ keys.lua_command['a?'] = function()
   _G.buffer = ui.command_entry
   textadept.editing.show_documentation()
   _G.buffer = orig_buffer
+end
+if OSX or CURSES then
+  -- UTF-8 input.
+  keys.utf8_input = {['\n'] = {ui.command_entry.finish_mode, function(code)
+    local c = tonumber(code, 16)
+    -- Determine the number of bytes in UTF-8 character to insert.
+    local buf, len = {}, 6
+    for i = 1, #utf8_lengths do
+      if c < utf8_lengths[i][1] then len = utf8_lengths[i][2] break end
+    end
+    -- Produce UTF-8 bytes.
+    for i = len, 2, -1 do
+      buf[i], c = bit32.bor(0x80, bit32.band(c, 0x3F)), bit32.rshift(c, 6)
+    end
+    -- Construct the lead UTF-8 byte.
+    buf[1] = bit32.bor(lead_bytes[len][1], bit32.band(c, lead_bytes[len][2]))
+    -- Transform bytes into strings and perform the insertion.
+    for i = 1, #buf do buf[i] = string.char(buf[i]) end
+    _G.buffer:add_text(table.concat(buf))
+  end}}
+  keys[OSX and 'mU' or 'mu'] = {ui.command_entry.enter_mode, 'utf8_input'}
 end
 
 -- Keys for the command entry.

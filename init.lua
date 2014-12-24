@@ -31,5 +31,13 @@ textadept.run.build_commands[_HOME] = function()
   if button == 1 then return 'make -C src '..target end
 end
 
+_M.ctags = require 'ctags'
+_M.ctags[_HOME] = _HOME..'/src/tags'
+_M.ctags[_USERHOME] = _HOME..'/src/tags'
+keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
+keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
+keys[not CURSES and 'a.' or 'm.'] = {_M.ctags.goto_tag, nil, false} -- forward
+keys[not CURSES and 'ac' or 'mc'] = {textadept.editing.autocomplete, 'ctag'}
+
 textadept.editing.STRIP_TRAILING_SPACES = true
 textadept.file_types.extensions.luadoc = 'lua'
