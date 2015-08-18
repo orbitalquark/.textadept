@@ -1,7 +1,10 @@
 -- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 ui.tabs = false
-if not CURSES then ui.set_theme('dark') end
+if not CURSES then
+  ui.set_theme(not WIN32 and not OSX and 'dark' or 'light',
+               {font = 'DejaVu Sans Mono', fontsize = 11})
+end
 
 _M.file_browser = require 'file_browser'
 keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
