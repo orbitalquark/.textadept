@@ -372,7 +372,8 @@ keys.find_in_project = {
   ['\n'] = {ui.command_entry.finish_mode, function(text)
     local root = io.get_project_root()
     if not root or text == '' then return end
-    ui.find.find_entry_text, ui.find.in_files = text, true
+    ui.find.find_entry_text = text
+    ui.find.match_case, ui.find.in_files = true, true
     ui.find.find_in_files(keys.find_in_project.paths[root] or root)
   end}
 }
