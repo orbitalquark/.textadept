@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~
 -- ca:        ~~          t    y
--- a:  aA   C                 Lm   oO          uU         Z_           +  -
+-- a:  aA   C               K Lm   oO          uU         Z_           +  -
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -304,29 +304,8 @@ end
 --keys.f8 = _M.file_diff.start
 --keys.adown = {_M.file_diff.goto_change, true}
 --keys.aup = _M.file_diff.goto_change
---keys.aleft = {_M.file_diff._M.file_differge, true}
---keys.aright = _M.file_diff._M.file_differge
-
--- Autocomplete word from dictionary.
-textadept.editing.autocompleters.dict = function()
-  local completions = {}
-  local s = _G.buffer:word_start_position(_G.buffer.current_pos, true)
-  local e = _G.buffer:word_end_position(_G.buffer.current_pos, true)
-  local word = _G.buffer:text_range(s, e)
-  local c, capitalized = word:sub(1, 1), word:find('^[A-Z]')
-  local patt = capitalized and '^['..c:upper()..c:lower()..']'..word:sub(2) or
-               '^'..word
-  for line in io.lines('/usr/share/dict/words') do
-    if line:find(patt) then
-      if capitalized and not line:find('^[A-Z]') then
-        line = line:sub(1, 1):upper()..line:sub(2) -- capitalize
-      end
-      completions[#completions + 1] = line
-    end
-  end
-  return #word, completions
-end
-keys[not CURSES and 'aK' or 'mK'] = {textadept.editing.autocomplete, 'dict'}
+--keys.aleft = {_M.file_diff.merge, true}
+--keys.aright = _M.file_diff.merge
 
 -- Modes.
 keys.open_file = {
