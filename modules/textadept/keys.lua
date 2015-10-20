@@ -97,7 +97,7 @@ keys[not CURSES and 'aq' or 'mq'] = {editing.enclose, "'", "'"}
 keys[not CURSES and 'a(' or 'm('] = {editing.enclose, '(', ')'}
 keys[not CURSES and 'a[' or 'm['] = {editing.enclose, '[', ']'}
 keys[not CURSES and 'a{' or 'm{'] = {editing.enclose, '{', '}'}
-keys[not CURSES and 'a*' or 'm*'] = any_char_mt(editing.enclose)
+keys[not CURSES and 'a%' or 'm%'] = any_char_mt(editing.enclose)
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
 
@@ -292,9 +292,17 @@ end
 
 --keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
 --keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
+--keys[not CURSES and 'a*' or 'm*'] = ...
 --keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
 --keys[not CURSES and 'a.' or 'm.'] = {_M.ctags.goto_tag, nil, false} -- forward
 --keys[not CURSES and 'ac' or 'mc'] = {textadept.editing.autocomplete, 'ctag'}
+--keys.f7 = {_M.spellcheck.check_spelling, true}
+--keys.sf7 = _M.spellcheck.check_spelling
+--keys.f8 = _M.file_diff.start
+--keys.adown = {_M.file_diff.goto_change, true}
+--keys.aup = _M.file_diff.goto_change
+--keys.aleft = {_M.file_diff._M.file_differge, true}
+--keys.aright = _M.file_diff._M.file_differge
 
 -- Autocomplete word from dictionary.
 textadept.editing.autocompleters.dict = function()
