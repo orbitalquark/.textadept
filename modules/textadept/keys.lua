@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~
 -- ca:        ~~          t    y
--- a:  aA   C               K Lm   oO          uU         Z_           +  -
+-- a:  aA   C                 Lm   oO          uU         Z_           +  -
 
 -- Utility functions.
 local function any_char_mt(f)
@@ -276,6 +276,9 @@ keys[not CURSES and 'aj' or 'mj'] = function()
   if button == 1 then spawn(command, root, ui.print, ui.print) end
 end
 
+keys[not CURSES and 'ak' or 'mk'] = {ui.command_entry.enter_mode,
+                                     'find_in_project'}
+
 -- Mercurial diff of current file.
 keys[not CURSES and 'aD' or 'mD'] = function()
   local root = io.get_project_root()
@@ -323,7 +326,7 @@ textadept.editing.autocompleters.dict = function()
   end
   return #word, completions
 end
-keys[not CURSES and 'ak' or 'mk'] = {textadept.editing.autocomplete, 'dict'}
+keys[not CURSES and 'aK' or 'mK'] = {textadept.editing.autocomplete, 'dict'}
 
 -- Modes.
 keys.open_file = {
@@ -385,6 +388,15 @@ setmetatable(keys.find_incremental, {__index = function(t, k)
                if #k > 1 and k:find('^[cams]*.+$') then return end
                ui.find.find_incremental(ui.command_entry:get_text()..k, true)
              end})
+keys.find_in_project = {
+  paths = {}, -- for per-project search path mappings
+  ['\n'] = {ui.command_entry.finish_mode, function(text)
+    local root = io.get_project_root()
+    if not root or text == '' then return end
+    ui.find.find_entry_text, ui.find.in_files = text, true
+    ui.find.find_in_files(keys.find_in_project.paths[root] or root)
+  end}
+}
 keys.lua_command['a?'] = function()
   local orig_buffer = _G.buffer
   _G.buffer = ui.command_entry
