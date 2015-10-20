@@ -39,7 +39,7 @@ _M.ctags[_HOME] = _HOME..'/src/tags'
 _M.ctags[_USERHOME] = _HOME..'/src/tags'
 keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
 keys[not CURSES and 'a*' or 'm*'] = function()
-  local ok, name = ui.dialogs.inputbox{title = 'Goto Tag'}
+  local ok, name = ui.dialogs.standard_inputbox{title = 'Goto Tag'}
   if ok == 1 then _M.ctags.goto_tag(name) end
 end
 keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
@@ -53,8 +53,8 @@ _M.file_diff = require 'file_diff'
 --keys.f8 = _M.file_diff.start
 --keys.adown = {_M.file_diff.goto_change, true}
 --keys.aup = _M.file_diff.goto_change
---keys.aleft = {_M.file_diff._M.file_differge, true}
---keys.aright = _M.file_diff._M.file_differge
+--keys.aleft = {_M.file_diff.merge, true}
+--keys.aright = _M.file_diff.merge
 
 textadept.editing.STRIP_TRAILING_SPACES = true
 textadept.file_types.extensions.luadoc = 'lua'
