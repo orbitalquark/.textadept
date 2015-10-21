@@ -1,4 +1,4 @@
--- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2007-2015 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 local buffer = buffer
 
@@ -20,7 +20,6 @@ buffer:set_y_caret_policy(buffer.CARET_SLOP + buffer.CARET_STRICT +
 --buffer:set_visible_policy()
 buffer.h_scroll_bar = false
 buffer.v_scroll_bar = false
---buffer.x_offset =
 --buffer.scroll_width =
 --buffer.scroll_width_tracking = true
 --buffer.end_at_last_line = false
@@ -68,7 +67,6 @@ buffer.annotation_visible = buffer.ANNOTATION_BOXED
 
 -- Other.
 buffer.buffered_draw = not CURSES and not OSX -- Quartz buffers drawing on OSX
---buffer.phases_draw =
 --buffer.word_chars =
 --buffer.whitespace_chars =
 --buffer.punctuation_chars =
@@ -124,10 +122,17 @@ buffer:marker_define(buffer.MARKNUM_FOLDERMIDTAIL, buffer.MARK_TCORNER)
 --buffer:marker_enable_highlight(true)
 
 -- Indicators.
-buffer.indic_style[textadept.editing.INDIC_HIGHLIGHT] = buffer.INDIC_ROUNDBOX
-if not CURSES then
-  buffer.indic_under[textadept.editing.INDIC_HIGHLIGHT] = true
-end
+buffer.indic_style[ui.find.INDIC_FIND] = buffer.INDIC_ROUNDBOX
+if not CURSES then buffer.indic_under[ui.find.INDIC_FIND] = true end
+local INDIC_BRACEMATCH = textadept.editing.INDIC_BRACEMATCH
+buffer.indic_style[INDIC_BRACEMATCH] = buffer.INDIC_BOX
+buffer:brace_highlight_indicator(not CURSES, INDIC_BRACEMATCH)
+local INDIC_HIGHLIGHT = textadept.editing.INDIC_HIGHLIGHT
+buffer.indic_style[INDIC_HIGHLIGHT] = buffer.INDIC_ROUNDBOX
+if not CURSES then buffer.indic_under[INDIC_HIGHLIGHT] = true end
+local INDIC_PLACEHOLDER = textadept.snippets.INDIC_PLACEHOLDER
+buffer.indic_style[INDIC_PLACEHOLDER] = not CURSES and buffer.INDIC_DOTBOX or
+                                        buffer.INDIC_STRAIGHTBOX
 
 -- Autocompletion.
 --buffer.auto_c_separator =

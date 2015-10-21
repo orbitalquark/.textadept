@@ -1,4 +1,4 @@
--- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2007-2015 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 ui.tabs = false
 if not CURSES then
@@ -39,8 +39,8 @@ _M.ctags[_HOME] = _HOME..'/src/tags'
 _M.ctags[_USERHOME] = _HOME..'/src/tags'
 keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
 keys[not CURSES and 'a*' or 'm*'] = function()
-  local ok, name = ui.dialogs.standard_inputbox{title = 'Goto Tag'}
-  if ok == 1 then _M.ctags.goto_tag(name) end
+  local button, name = ui.dialogs.standard_inputbox{title = 'Goto Tag'}
+  if button == 1 then _M.ctags.goto_tag(name) end
 end
 keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
 keys[not CURSES and 'a.' or 'm.'] = {_M.ctags.goto_tag, nil, false} -- forward
