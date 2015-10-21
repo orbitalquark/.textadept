@@ -1,4 +1,4 @@
--- Copyright 2007-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2007-2015 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 --[[ This comment is for LuaDoc.
 ---
@@ -373,8 +373,10 @@ keys.find_in_project = {
     local root = io.get_project_root()
     if not root or text == '' then return end
     ui.find.find_entry_text = text
+    local match_case, in_files = ui.find.match_case, ui.find.in_files
     ui.find.match_case, ui.find.in_files = true, true
     ui.find.find_in_files(keys.find_in_project.paths[root] or root)
+    ui.find.match_case, ui.find.in_files = match_case, in_files -- restore
   end}
 }
 keys.lua_command['a?'] = function()
