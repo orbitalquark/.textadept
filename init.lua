@@ -6,9 +6,10 @@ if not CURSES then
                {font = 'DejaVu Sans Mono', fontsize = 11})
 end
 
-_M.file_browser = require 'file_browser'
-keys[not CURSES and 'ae' or 'me'] = _M.file_browser.init
+textadept.editing.STRIP_TRAILING_SPACES = true
+textadept.file_types.extensions.luadoc = 'lua'
 
+-- Settings for Textadept development.
 io.snapopen_filters[_HOME] = {
   extensions = {'a', 'o', 'dll', 'zip', 'tgz', 'gz', 'exe', 'osx'},
   folders = {
@@ -23,9 +24,7 @@ io.snapopen_filters[_HOME] = {
   },
   'textadept$',
   'textadept.*curses',
-  'textadeptjit',
-  'textadept32',
-  '%d%d.*%.html$'
+  'textadeptjit'
 }
 textadept.run.build_commands[_HOME] = function()
   local button, target = ui.dialogs.standard_inputbox{
@@ -34,27 +33,34 @@ textadept.run.build_commands[_HOME] = function()
   if button == 1 then return 'make -C src '..target end
 end
 
-_M.ctags = require 'ctags'
+-- File browser module.
+_M.file_browser = require('file_browser')
+keys[not CURSES and 'ae' or 'me'] = function()
+  _M.file_browser.init(io.get_project_root())
+end
+
+-- Ctags module.
+_M.ctags = require('ctags')
 _M.ctags[_HOME] = _HOME..'/src/tags'
 _M.ctags[_USERHOME] = _HOME..'/src/tags'
+local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
 keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
-keys[not CURSES and 'a*' or 'm*'] = function()
-  local button, name = ui.dialogs.standard_inputbox{title = 'Goto Tag'}
-  if button == 1 then _M.ctags.goto_tag(name) end
-end
-keys[not CURSES and 'a,' or 'm,'] = {_M.ctags.goto_tag, nil, true} -- back
-keys[not CURSES and 'a.' or 'm.'] = {_M.ctags.goto_tag, nil, false} -- forward
-keys[not CURSES and 'ac' or 'mc'] = {textadept.editing.autocomplete, 'ctag'}
+keys[not CURSES and 'a*' or 'm*'] = m_ctags['G_oto Ctag...'][2]
+keys[not CURSES and 'a,' or 'm,'] = m_ctags['Jump _Back'][2]
+keys[not CURSES and 'a.' or 'm.'] = m_ctags['Jump _Forward'][2]
+keys[not CURSES and 'aC' or 'mC'] = m_ctags['_Autocomplete Tag'][2]
 
-_M.spellcheck = require 'spellcheck'
---keys.f7 = {_M.spellcheck.check_spelling, true}
---keys.sf7 = _M.spellcheck.check_spelling
-_M.file_diff = require 'file_diff'
+-- Spellcheck module.
+_M.spellcheck = require('spellcheck')
+--keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
+--keys.sf7 = m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
+
+-- File diff module.
+_M.file_diff = require('file_diff')
 --keys.f8 = _M.file_diff.start
---keys.adown = {_M.file_diff.goto_change, true}
---keys.aup = _M.file_diff.goto_change
---keys.aleft = {_M.file_diff.merge, true}
---keys.aright = _M.file_diff.merge
+--keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
+--keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
+--keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
+--keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
 
-textadept.editing.STRIP_TRAILING_SPACES = true
-textadept.file_types.extensions.luadoc = 'lua'
+events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
