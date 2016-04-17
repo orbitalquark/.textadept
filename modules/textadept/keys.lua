@@ -54,8 +54,8 @@ local m_sel = m_edit[_L['_Select']]
 keys[GUI and 'ca]' or 'cm]'] = m_sel[_L['Select to _Matching Brace']][2]
 keys[GUI and 'a>' or 'm>'] = m_sel[_L['Select between _XML Tags']][2]
 -- TODO: m_sel[_L['Select in XML _Tag']][2]
-keys[GUI and 'a"' or 'm"'] = m_sel[_L['Select in _Single Quotes']][2]
-keys[GUI and "a'" or "m'"] = m_sel[_L['Select in _Double Quotes']][2]
+keys[GUI and "a'" or "m'"] = m_sel[_L['Select in _Single Quotes']][2]
+keys[GUI and 'a"' or 'm"'] = m_sel[_L['Select in _Double Quotes']][2]
 keys[GUI and 'a)' or 'm)'] = m_sel[_L['Select in _Parentheses']][2]
 keys[GUI and 'a]' or 'm]'] = m_sel[_L['Select in _Brackets']][2]
 keys[GUI and 'a}' or 'm}'] = m_sel[_L['Select in B_races']][2]
@@ -275,7 +275,7 @@ keys[GUI and 'aD' or 'mD'] = function()
   local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
   local diff = p:read('*a')
   p:close()
-  local buffer buffer.new()
+  local buffer = buffer.new()
   buffer:set_lexer('diff')
   buffer:add_text(diff)
   buffer:goto_pos(0)
