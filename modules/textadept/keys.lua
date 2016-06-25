@@ -13,7 +13,7 @@ local keys, GUI = keys, not CURSES
 
 -- File.
 keys[GUI and 'cac' or 'cmc'] = buffer.new
-keys.cr = {ui.command_entry.enter_mode, 'open_file'}
+keys.cr = function() ui.command_entry.enter_mode('open_file') end
 keys[GUI and 'car' or 'cmr'] = io.open_recent_file
 -- TODO: io.reload_file
 keys.co = io.save_file
@@ -115,12 +115,12 @@ keys[GUI and 'aM' or 'mM'] = textadept.bookmarks.toggle
 keys[GUI and 'aN' or 'mN'] = m_bookmark[_L['_Next Bookmark']][2]
 keys[GUI and 'aP' or 'mP'] = m_bookmark[_L['_Previous Bookmark']][2]
 keys.cam = textadept.bookmarks.goto_mark -- GTK only
--- Snapopen.
-local m_snapopen = m_tools[_L['Snap_open']]
-keys[GUI and 'cau' or 'cmu'] = m_snapopen[_L['Snapopen _User Home']][2]
-keys[GUI and 'cah' or 'cmh'] = m_snapopen[_L['Snapopen _Textadept Home']][2]
+-- Quick Open.
+local m_quickopen = m_tools[_L['Quick _Open']]
+keys[GUI and 'cau' or 'cmu'] = m_quickopen[_L['Quickly Open _User Home']][2]
+keys[GUI and 'cah' or 'cmh'] = m_quickopen[_L['Quickly Open _Textadept Home']][2]
 if CURSES then keys.cmg = keys.cmh end -- cmh is sometimes just ch
-keys[GUI and 'caj' or 'cmj'] = io.snapopen
+keys[GUI and 'caj' or 'cmj'] = io.quick_open
 -- Snippets.
 keys['\t'] = textadept.snippets._insert
 keys['s\t'] = textadept.snippets._previous
@@ -251,7 +251,7 @@ local last_buffer = buffer
 -- Save last buffer. Useful after ui.switch_buffer().
 events.connect(events.BUFFER_BEFORE_SWITCH, function() last_buffer = buffer end)
 keys[GUI and 'al' or 'ml'] = function()
-  if _BUFFERS[last_buffer] then view:goto_buffer(_BUFFERS[last_buffer]) end
+  if _BUFFERS[last_buffer] then view:goto_buffer(last_buffer) end
 end
 
 -- Prompt for project root command to run (e.g. "hg status").
@@ -298,14 +298,16 @@ end
 
 -- Modes.
 keys.open_file = {
-  ['\n'] = {ui.command_entry.finish_mode, function(file)
-    if file ~= '' and not file:find('^%a?:?[/\\]') then
-      -- Convert relative path into an absolute one.
-      file = (_G.buffer.filename or
-              lfs.currentdir()..'/'):match('^.+[/\\]')..file
-    end
-    io.open_file(file ~= '' and file)
-  end},
+  ['\n'] = function()
+    return ui.command_entry.finish_mode(function(file)
+      if file ~= '' and not file:find('^%a?:?[/\\]') then
+        -- Convert relative path into an absolute one.
+        file = (_G.buffer.filename or
+                lfs.currentdir()..'/'):match('^.+[/\\]')..file
+      end
+      io.open_file(file ~= '' and file)
+    end)
+  end,
   ['\t'] = function()
     if not ui.command_entry:auto_c_active() then
       -- Autocomplete the filename in the command entry
@@ -323,7 +325,7 @@ keys.open_file = {
         lfs.dir_foreach(dir, function(file)
           file = file:match('[^/\\]+[/\\]?$')
           if file:find(part) then files[#files + 1] = file end
-        end, nil, false, 0, true)
+        end, nil, 0, true)
         table.sort(files)
         keys.open_file.files = files -- store for tabbing through
         ui.command_entry:auto_c_show(#part - 1, table.concat(files, ' '))

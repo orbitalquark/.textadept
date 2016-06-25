@@ -6,11 +6,17 @@ if not CURSES then
                {font = 'DejaVu Sans Mono', fontsize = 11})
 end
 
-textadept.editing.STRIP_TRAILING_SPACES = true
+textadept.editing.strip_trailing_spaces = true
 textadept.file_types.extensions.luadoc = 'lua'
 
+events.connect(events.LEXER_LOADED, function(lexer)
+  if lfs.attributes(_USERHOME..'/modules/'..lexer..'/post_init.lua') then
+    require(lexer..'/post_init')
+  end
+end)
+
 -- Settings for Textadept development.
-io.snapopen_filters[_HOME] = {
+io.quick_open_filters[_HOME] = {
   extensions = {'a', 'o', 'dll', 'zip', 'tgz', 'gz', 'exe', 'osx'},
   folders = {
     '%.hg$',
