@@ -2,8 +2,8 @@
 
 ui.tabs = false
 if not CURSES then
-  ui.set_theme(not WIN32 and not OSX and 'dark' or 'light',
-               {font = 'DejaVu Sans Mono', fontsize = 11})
+  ui.set_theme(LINUX and 'dark' or 'light',
+               {font = 'DejaVu Sans Mono', fontsize = 14})
 end
 
 textadept.editing.strip_trailing_spaces = true
@@ -17,16 +17,20 @@ end)
 
 -- Settings for Textadept development.
 io.quick_open_filters[_HOME] = {
-  extensions = {'a', 'o', 'dll', 'zip', 'tgz', 'gz', 'exe', 'osx'},
+  extensions = {
+    'a', 'o', 'so', 'dll', 'zip', 'tgz', 'gz', 'exe', 'osx', 'orig', 'rej'
+  },
   folders = {
     '%.hg$',
     'doc/api', 'doc/book', 'doc/doxygen',
+    'gtdialog/cdk',
     'images',
-    'ipk',
+    'lua/doc', 'lua/src/lib/lpeg', 'lua/src/lib/lfs',
+    'modules/yaml/src',
     'releases',
     'scintilla/cocoa', 'scintilla/doc', 'scintilla/lexers', 'scintilla/qt',
-    'scintilla/test', 'scintilla/win32',
-    'src/cdk', 'src/luajit', 'src/win.*', 'src/gtkosx', 'src/termkey',
+    'scintilla/scripts', 'scintilla/test', 'scintilla/win32',
+    'src/cdk', 'src/luajit', 'src/win.*', 'src/gtkosx', 'src/termkey', 'src/tre'
   },
   'textadept$',
   'textadept.*curses',
@@ -39,22 +43,47 @@ textadept.run.build_commands[_HOME] = function()
   if button == 1 then return 'make -C src '..target end
 end
 
--- File browser module.
-_M.file_browser = require('file_browser')
-keys[not CURSES and 'ae' or 'me'] = function()
-  _M.file_browser.init(io.get_project_root())
-end
+io.quick_open_filters[_USERHOME] = {
+  extensions = {'a', 'o', 'so', 'dll', 'zip', 'tgz', 'gz'},
+  folders = { '%.hg$', 'spellcheck/hunspell' }
+}
+
+-- Hide margins when writing e-mails and commit messages.
+events.connect(events.FILE_OPENED, function(filename)
+  if filename and
+     (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
+    for i = 0, buffer.margins - 1 do
+      buffer.margin_width_n[i] = 0
+    end
+  end
+end)
+
+-- Mercurial diff of current file.
+local m_file = textadept.menu.menubar[_L['_File']]
+table.insert(m_file, #m_file - 1, {''})
+table.insert(m_file, #m_file - 1, {'Hg Diff', function()
+  local root = io.get_project_root()
+  if not buffer.filename or not root then return end
+  local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
+  local diff = p:read('*a')
+  p:close()
+  local buffer = buffer.new()
+  buffer:set_lexer('diff')
+  buffer:add_text(diff)
+  buffer:goto_pos(0)
+  buffer:set_save_point()
+end})
 
 -- Ctags module.
 _M.ctags = require('ctags')
 _M.ctags[_HOME] = _HOME..'/src/tags'
 _M.ctags[_USERHOME] = _HOME..'/src/tags'
 local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
-keys[not CURSES and 'a&' or 'm&'] = _M.ctags.goto_tag
-keys[not CURSES and 'a*' or 'm*'] = m_ctags['G_oto Ctag...'][2]
+keys[not CURSES and 'a.' or 'm.'] = _M.ctags.goto_tag
+-- TODO: m_ctags['G_oto Ctag...'][2]
 keys[not CURSES and 'a,' or 'm,'] = m_ctags['Jump _Back'][2]
-keys[not CURSES and 'a.' or 'm.'] = m_ctags['Jump _Forward'][2]
-keys[not CURSES and 'aC' or 'mC'] = m_ctags['_Autocomplete Tag'][2]
+-- TODO: m_ctags['Jump _Forward'][2]
+-- TODO: m_ctags['_Autocomplete Tag'][2]
 
 -- Spellcheck module.
 _M.spellcheck = require('spellcheck')
