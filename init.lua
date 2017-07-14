@@ -55,6 +55,8 @@ events.connect(events.FILE_OPENED, function(filename)
     for i = 0, buffer.margins - 1 do
       buffer.margin_width_n[i] = 0
     end
+    buffer.wrap_mode = buffer.WRAP_WHITESPACE
+    buffer.edge_mode = buffer.EDGE_NONE
   end
 end)
 
