@@ -118,9 +118,13 @@ keys[GUI and 'ar' or 'mr'] = io.quick_open
 -- Snippets.
 keys['\t'] = function()
   if buffer:auto_c_active() then buffer:line_down() return end -- scroll
-  return textadept.snippets._insert() ~= false or
-         buffer.selection_empty and
-         textadept.editing.autocomplete('word') == true
+  if textadept.snippets._insert() ~= false then return true end
+  if buffer.selection_empty then
+    if textadept.editing.autocomplete('word') == true then return true end
+    local line, pos = buffer:get_cur_line()
+    return not line:sub(1, pos):find('^%s*$')
+  end
+  return false
 end
 keys['s\t'] = function()
   if buffer:auto_c_active() then buffer:line_up() return end -- scroll
