@@ -1,13 +1,20 @@
 -- Copyright 2007-2017 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 ui.tabs = false
-if not CURSES then
-  ui.set_theme(LINUX and 'dark' or 'light',
-               {font = 'DejaVu Sans Mono', fontsize = 14})
-end
 
 textadept.editing.strip_trailing_spaces = true
 textadept.file_types.extensions.luadoc = 'lua'
+
+if not CURSES then
+  buffer.set_theme(LINUX and 'dark' or 'light',
+                   {font = 'DejaVu Sans Mono', fontsize = 14})
+end
+buffer.h_scroll_bar = false
+buffer.v_scroll_bar = false
+buffer.caret_period = 0
+buffer.caret_style = buffer.CARETSTYLE_BLOCK
+buffer.edge_mode = not CURSES and buffer.EDGE_LINE or buffer.EDGE_BACKGROUND
+buffer.edge_column = 80
 
 events.connect(events.LEXER_LOADED, function(lexer)
   if lfs.attributes(_USERHOME..'/modules/'..lexer..'/post_init.lua') then
@@ -45,7 +52,7 @@ end
 
 io.quick_open_filters[_USERHOME] = {
   extensions = {'a', 'o', 'so', 'dll', 'zip', 'tgz', 'gz'},
-  folders = { '%.hg$', 'spellcheck/hunspell' }
+  folders = {'%.hg$', 'spellcheck/hunspell'}
 }
 
 -- Hide margins when writing e-mails and commit messages.

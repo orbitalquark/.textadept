@@ -35,12 +35,12 @@ keys.ck = function()
   buffer:cancel() -- cancel selection mode
 end
 keys[GUI and 'ak' or 'mk'] = buffer.copy
-keys.cy = buffer.paste
+keys.cy = textadept.editing.paste
 keys[GUI and 'aD' or 'mD'] = buffer.line_duplicate
 -- buffer.clear is 'del'
 -- TODO: m_edit[_L['D_elete Word']][2]
 -- TODO: buffer.select_all
-keys[GUI and 'am' or 'mm'] = textadept.editing.match_brace
+keys[GUI and 'am' or 'mm'] = m_edit[_L['_Match Brace']][2]
 -- m_edit[_L['Complete _Word']][2] is '\t'
 keys[GUI and 'caw' or 'cmw'] = textadept.editing.highlight_word
 keys[GUI and 'c/' or 'c_'] = textadept.editing.block_comment
@@ -49,14 +49,9 @@ keys.cj = textadept.editing.join_lines
 keys[GUI and 'a|' or 'm|'] = m_edit[_L['_Filter Through']][2]
 -- Select.
 local m_sel = m_edit[_L['_Select']]
-keys[GUI and 'aM' or 'mM'] = m_sel[_L['Select to _Matching Brace']][2]
+keys[GUI and 'aM' or 'mM'] = m_sel[_L['Select between _Matching Delimiters']][2]
 -- TODO: m_sel[_L['Select between _XML Tags']][2]
 -- TODO: m_sel[_L['Select in XML _Tag']][2]
--- TODO: m_sel[_L['Select in _Single Quotes']][2]
--- TODO: m_sel[_L['Select in _Double Quotes']][2]
--- TODO: m_sel[_L['Select in _Parentheses']][2]
--- TODO: m_sel[_L['Select in _Brackets']][2]
--- TODO: m_sel[_L['Select in B_races']][2]
 keys[GUI and 'aw' or 'mw'] = textadept.editing.select_word
 -- TODO: textadept.editing.select_line
 -- TODO: textadept.editing.select_paragraph
@@ -274,7 +269,7 @@ keys.cl = buffer.vertical_centre_caret
 -- TODO: buffer.line_scroll_up
 -- TODO: buffer.scroll_to_start
 -- TODO: buffer.scroll_to_end
-keys[GUI and 'c ' or 'c@'] = function() buffer.selection_mode = 0 end
+keys['c '] = function() buffer.selection_mode = 0 end
 keys['c]'] = buffer.swap_main_anchor_caret
 
 -- Miscellaneous not in standard menu.
@@ -290,7 +285,11 @@ keys[GUI and 'ag' or 'mg'] = setmetatable({}, {__index = function(_, k)
     buffer.target_end = buffer.line_end_position[buffer:line_from_position(pos)]
     buffer.search_flags = buffer.FIND_MATCHCASE
     if buffer:search_in_target(k) > 0 then
-      buffer:goto_pos(buffer.target_start)
+      if buffer.move_extends_selection then
+        buffer.current_pos = buffer.target_start
+      else
+        buffer:goto_pos(buffer.target_start)
+      end
     end
   end
 end})
@@ -311,9 +310,15 @@ keys.co = function()
   buffer:new_line()
 end
 keys[GUI and 'ao' or 'mo'] = function()
-  buffer:line_up()
-  buffer:line_end()
-  buffer:new_line()
+  if buffer:line_from_position(buffer.current_pos) > 0 then
+    buffer:line_up()
+    buffer:line_end()
+    buffer:new_line()
+  else
+    buffer:home()
+    buffer:new_line()
+    buffer:line_up()
+  end
 end
 keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
 keys[GUI and 'a>' or 'm>'] = function() buffer:line_scroll(20, 0) end
@@ -358,14 +363,15 @@ keys.open_file = {
     -- Autocomplete the filename in the command entry
     local files = {}
     local path = ui.command_entry:get_text()
-    if not path:find('^a?:?[/\\]') then
+    if not path:find('^%a?:?[/\\]') then
       -- Convert relative path into an absolute one.
-      path = (buffer.filename or lfs.currentdir()..'/'):match('^.+[/\\]')..path
+      local sep = not WIN32 and '/' or '\\'
+      path = (buffer.filename or lfs.currentdir()..sep):match('^.+[/\\]')..path
     end
-    local dir, part = path:match('^(.-)([^/\\]*)$')
+    local dir, part = path:match('^(.-)\\?([^/\\]*)$')
     if lfs.attributes(dir, 'mode') == 'directory' then
       -- Iterate over directory, finding file matches.
-      part = '^'..part
+      part = '^'..part:gsub('(%p)', '%%%1')
       lfs.dir_foreach(dir, function(file)
         file = file:match('[^/\\]+[/\\]?$')
         if file:find(part) then files[#files + 1] = file end
