@@ -31,8 +31,12 @@ keys.cu = buffer.undo
 keys[GUI and 'au' or 'mu'] = buffer.redo
 keys.ck = function()
   if buffer.selection_empty then buffer:line_end_extend() end
-  buffer:cut()
-  buffer:cancel() -- cancel selection mode
+  if not buffer.selection_empty then
+    buffer:cut()
+    buffer:cancel() -- cancel selection mode
+  else
+    buffer:clear()
+  end
 end
 keys[GUI and 'ak' or 'mk'] = buffer.copy
 keys.cy = textadept.editing.paste

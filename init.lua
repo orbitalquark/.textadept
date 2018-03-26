@@ -6,7 +6,7 @@ textadept.editing.strip_trailing_spaces = true
 textadept.file_types.extensions.luadoc = 'lua'
 
 if not CURSES then
-  buffer.set_theme(LINUX and 'dark' or 'light',
+  buffer:set_theme(LINUX and 'dark' or 'light',
                    {font = 'DejaVu Sans Mono', fontsize = 14})
 end
 buffer.h_scroll_bar = false
