@@ -29,19 +29,18 @@ io.quick_open_filters[_HOME] = {
   },
   folders = {
     '%.hg$',
-    'doc/api', 'doc/book', 'doc/doxygen',
+    'doc/api', 'doc/book',
     'gtdialog/cdk',
     'images',
     'lua/doc', 'lua/src/lib/lpeg', 'lua/src/lib/lfs',
     'modules/yaml/src',
     'releases',
-    'scintilla/cocoa', 'scintilla/doc', 'scintilla/lexers', 'scintilla/qt',
-    'scintilla/scripts', 'scintilla/test', 'scintilla/win32',
-    'src/cdk', 'src/luajit', 'src/win.*', 'src/gtkosx', 'src/termkey', 'src/tre'
+    'scintilla/cocoa', 'scintilla/doc', 'scintilla/lexers', 'scintilla/lua',
+    'scintilla/qt', 'scintilla/scripts', 'scintilla/test', 'scintilla/win32',
+    'src/cdk', 'src/win.*', 'src/gtkosx', 'src/termkey'
   },
   'textadept$',
-  'textadept.*curses',
-  'textadeptjit'
+  'textadept-curses'
 }
 textadept.run.build_commands[_HOME] = function()
   local button, target = ui.dialogs.standard_inputbox{
