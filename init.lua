@@ -49,10 +49,69 @@ io.quick_open_filters[_USERHOME] = {
   folders = {'%.hg$', 'spellcheck/hunspell'}
 }
 
+-- Hide margins when writing e-mails and commit messages.
+events.connect(events.FILE_OPENED, function(filename)
+  if filename and
+     (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
+    for i = 0, buffer.margins - 1 do
+      buffer.margin_width_n[i] = 0
+    end
+    buffer.wrap_mode = buffer.WRAP_WHITESPACE
+    buffer.edge_mode = buffer.EDGE_NONE
+  end
+end)
+
+-- Mercurial diff of current file.
+local m_file = textadept.menu.menubar[_L['_File']]
+table.insert(m_file, #m_file - 1, {''})
+table.insert(m_file, #m_file - 1, {'Hg Diff', function()
+  local root = io.get_project_root()
+  if not buffer.filename or not root then return end
+  local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
+  local diff = p:read('*a')
+  p:close()
+  local buffer = buffer.new()
+  buffer:set_lexer('diff')
+  buffer:add_text(diff)
+  buffer:goto_pos(0)
+  buffer:set_save_point()
+end})
+
+-- Ctags module.
+_M.ctags = require('ctags')
+_M.ctags[_HOME] = _HOME..'/src/tags'
+_M.ctags[_USERHOME] = _HOME..'/src/tags'
+local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
+keys[not CURSES and 'a.' or 'm.'] = _M.ctags.goto_tag
+-- TODO: m_ctags['G_oto Ctag...'][2]
+keys[not CURSES and 'a,' or 'm,'] = m_ctags['Jump _Back'][2]
+-- TODO: m_ctags['Jump _Forward'][2]
+-- TODO: m_ctags['_Autocomplete Tag'][2]
+
+-- Spellcheck module.
+_M.spellcheck = require('spellcheck')
+--keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
+--keys.sf7 = m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
+
+-- File diff module.
+_M.file_diff = require('file_diff')
+--keys.f8 = _M.file_diff.start
+--keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
+--keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
+--keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
+--keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
+
+-- Language Server Protocol.
+_M.lsp = require('lsp')
+
+events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
+
+-- Language-specific settings.
+
 -- Indent on 'Enter' when between auto-paired '{}' for C and C++.
 events.connect(events.CHAR_ADDED, function(ch)
   if (buffer:get_lexer() ~= 'ansi_c' and buffer:get_lexer() ~= 'cpp') or
-     ch ~= 10 or not textadept.editing.AUTOINDENT then
+     ch ~= 10 or not textadept.editing.auto_indent then
     return
   end
   local line = buffer:line_from_position(buffer.current_pos)
@@ -312,57 +371,3 @@ events.connect(events.LEXER_LOADED, function(lexer)
   -- REPL.
   _M.repl = require('lua.repl')
 end)
-
--- Hide margins when writing e-mails and commit messages.
-events.connect(events.FILE_OPENED, function(filename)
-  if filename and
-     (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
-    for i = 0, buffer.margins - 1 do
-      buffer.margin_width_n[i] = 0
-    end
-    buffer.wrap_mode = buffer.WRAP_WHITESPACE
-    buffer.edge_mode = buffer.EDGE_NONE
-  end
-end)
-
--- Mercurial diff of current file.
-local m_file = textadept.menu.menubar[_L['_File']]
-table.insert(m_file, #m_file - 1, {''})
-table.insert(m_file, #m_file - 1, {'Hg Diff', function()
-  local root = io.get_project_root()
-  if not buffer.filename or not root then return end
-  local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
-  local diff = p:read('*a')
-  p:close()
-  local buffer = buffer.new()
-  buffer:set_lexer('diff')
-  buffer:add_text(diff)
-  buffer:goto_pos(0)
-  buffer:set_save_point()
-end})
-
--- Ctags module.
-_M.ctags = require('ctags')
-_M.ctags[_HOME] = _HOME..'/src/tags'
-_M.ctags[_USERHOME] = _HOME..'/src/tags'
-local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
-keys[not CURSES and 'a.' or 'm.'] = _M.ctags.goto_tag
--- TODO: m_ctags['G_oto Ctag...'][2]
-keys[not CURSES and 'a,' or 'm,'] = m_ctags['Jump _Back'][2]
--- TODO: m_ctags['Jump _Forward'][2]
--- TODO: m_ctags['_Autocomplete Tag'][2]
-
--- Spellcheck module.
-_M.spellcheck = require('spellcheck')
---keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
---keys.sf7 = m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
-
--- File diff module.
-_M.file_diff = require('file_diff')
---keys.f8 = _M.file_diff.start
---keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
---keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
---keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
---keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
-
-events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
