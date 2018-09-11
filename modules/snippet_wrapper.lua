@@ -1,7 +1,5 @@
 -- Copyright 2015-2017 Mitchell mitchell.att.foicica.com. See LICENSE.
 
-local M = {}
-
 -- Retrieves the API documentation for function name *symbol* in lexer language
 -- *lang* and returns its signature in snippet form for insertion.
 -- Documentation is read from API files in the `textadept.editing.api_files`
@@ -59,11 +57,10 @@ local function get_api_snippet(symbol, lang)
   end)
 end
 
----
 -- Defines a snippet that inserts the argument list for function *name* based on
 -- its API documentation.
 -- @param name The function name to insert the argument list for as a snippet.
-function M.func(name)
+local function wrap(name)
   return function() return get_api_snippet(name, buffer:get_lexer(true)) end
 end
 
@@ -76,4 +73,4 @@ events.connect(events.LEXER_LOADED, function(lexer)
   end})
 end)
 
-return M
+return wrap
