@@ -1,4 +1,4 @@
--- Copyright 2015-2017 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2015-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 -- Retrieves the API documentation for function name *symbol* in lexer language
 -- *lang* and returns its signature in snippet form for insertion.
