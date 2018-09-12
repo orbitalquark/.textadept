@@ -1,0 +1,14 @@
+-- Copyright 2017 Mitchell mitchell.att.foicica.com. See LICENSE.
+
+---
+-- Returns a list that represents the differences between strings *text1* and
+-- *text2*.
+-- Each consecutive pair of elements in the returned list represents a "diff".
+-- The first element is an integer: 0 for a deletion, 1 for an insertion, and 2
+-- for equality. The second element is the associated diff text.
+-- @param text1 String to compare against.
+-- @param text2 String to compare.
+-- @return list of differences
+-- @usage diffs = diff(text1, text2)
+--        for i = 1, #diffs, 2 do print(diffs[i], diffs[i + 1]) end
+function diff(text1, text2) end
