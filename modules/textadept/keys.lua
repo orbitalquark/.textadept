@@ -328,12 +328,22 @@ keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
 keys[GUI and 'a>' or 'm>'] = function() buffer:line_scroll(20, 0) end
 keys.f10 = function() ui.maximized = not ui.maximized end
 
--- Language modules.
+-- Language modules or LSP.
 events.connect(events.LEXER_LOADED, function(lang)
-  if not keys[lang] or keys[lang]['\t'] then return end
-  keys[lang]['\t'] = function()
-    return buffer.selection_empty and
-           textadept.editing.autocomplete(lang) == true
+  if not keys[lang] then return end
+  if not keys[lang]['\t'] then
+    keys[lang]['\t'] = function()
+      return buffer.selection_empty and
+             (textadept.editing.autocomplete(lang) == true or
+              textadept.editing.autocomplete('lsp') == true)
+    end
+  end
+  if not keys[lang][GUI and 'a?' or 'm?'] then
+    keys[lang][GUI and 'a?' or 'm?'] = function()
+      _M.lsp.signature_help()
+      if not buffer:call_tip_active() then _M.lsp.hover() end
+      return buffer:call_tip_active()
+    end
   end
 end)
 

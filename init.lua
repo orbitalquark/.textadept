@@ -36,6 +36,7 @@ io.quick_open_filters[_HOME] = {
   'textadept$',
   'textadept-curses'
 }
+ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
 textadept.run.build_commands[_HOME] = function()
   local button, target = ui.dialogs.standard_inputbox{
     title = _L['Command'], informative_text = 'make -C src'
@@ -103,6 +104,18 @@ _M.file_diff = require('file_diff')
 
 -- Language Server Protocol.
 _M.lsp = require('lsp')
+local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
+-- TODO: m_lsp[_L['_Start Server...']][2]
+-- TODO: m_lsp[_L['Sto_p Server']][2]
+-- TODO: m_lsp[_L['Goto _Workspace Symbol...']][2]
+-- TODO: m_lsp[_L['Goto _Document Symbol...']][2]
+-- TODO: m_lsp[_L['_Autocomplete']][2]
+-- TODO: m_lsp[_L['Show _Hover Information']][2]
+-- TODO: m_lsp[_L['Show Si_gnature Help']][2]
+-- TODO: m_lsp[_L['Goto _Definition']][2]
+-- TODO: m_lsp[_L['Goto _Type Definition']][2]
+-- TODO: m_lsp[_L['Goto _Implementation']][2]
+-- TODO: m_lsp[_L['Find _References']][2]
 
 events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
 
