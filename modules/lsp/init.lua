@@ -36,6 +36,8 @@ local M = {}
 -- Localizations.
 local _L = _L
 if _L['_Language Server']:find('^No Localization') then
+  -- Error messages.
+  _L['No project root found'] = 'No project root found'
   -- Dialogs.
   _L['Start Server...'] = 'Start Server...'
   _L['language server already running'] = 'language server already running'
@@ -116,22 +118,25 @@ local Server = {}
 ---
 -- Starts, initializes, and returns a new language server.
 -- @param cmd String command to start the language server.
--- @param init_options Table of options to be passed to the language server for
---   initialization.
-function Server.new(cmd, init_options)
+-- @param cwd Optional string current working directory (cwd) to start the
+--   language server in.
+-- @param init_options Optional table of options to be passed to the language
+--   server for initialization.
+function Server.new(cmd, cwd, init_options)
+  if type(cwd) == 'table' then cwd, init_options = nil, cwd end
+  local root = assert(io.get_project_root(), _L['No project root found'])
   local current_view = view
   ui._print('[LSP]', 'Starting language server: '..cmd)
   ui.goto_view(current_view)
   local server = setmetatable({request_id = 0}, {__index = Server})
-  server.proc = assert(spawn(cmd, nil, function(output) server:log(output) end,
+  server.proc = assert(spawn(cmd, cwd, function(output) server:log(output) end,
                              function(output) server:log(output) end,
                              function(status)
                                server:log('Server exited with status '..status)
                              end))
   local result = server:request('initialize', {
     processId = json.null,
-    rootUri = not WIN32 and 'file://'..io.get_project_root() or
-              'file:///'..io.get_project_root():gsub('\\', '/'),
+    rootUri = not WIN32 and 'file://'..root or 'file:///'..root:gsub('\\', '/'),
     initializationOptions = init_options,
     capabilities = {
       --workspace = nil,
@@ -200,7 +205,7 @@ function Server:read()
   local len = tonumber(line:match('%d+$'))
   while #line > 0 do line = self.proc:read() end -- skip other headers
   local data = self.proc:read(len)
-  if M.log_rpc then server:log('RPC recv: '..data) end
+  if M.log_rpc then self:log('RPC recv: '..data) end
   return json.decode(data)
 end
 
@@ -221,8 +226,9 @@ function Server:request(method, params)
     jsonrpc = '2.0', id = self.request_id, method = method, params = params
   }
   local data = json.encode(message)
-  if M.log_rpc then server:log('RPC send: '..data) end
-  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s', #data, data))
+  if M.log_rpc then self:log('RPC send: '..data) end
+  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s\r\n', #data + 2,
+                                data))
   -- Read incoming JSON messages until the proper response is found.
   repeat
     message = self:read()
@@ -246,8 +252,9 @@ end
 function Server:notify(method, params)
   local message = {jsonrpc = '2.0', method = method, params = params}
   local data = json.encode(message)
-  if M.log_rpc then server:log('RPC send: '..data) end
-  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s', #data, data))
+  if M.log_rpc then self:log('RPC send: '..data) end
+  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s\r\n', #data + 2,
+                                data))
 end
 
 ---
@@ -257,8 +264,9 @@ end
 function Server:respond(id, result)
   local message = {jsonrpc = '2.0', id = id, result = result}
   local data = json.encode(message)
-  if M.log_rpc then server:log('RPC send: '..data) end
-  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s', #data, data))
+  if M.log_rpc then self:log('RPC send: '..data) end
+  self.proc:write(string.format('Content-Length: %d\r\n\r\n%s\r\n', #data + 2,
+                                data))
 end
 
 ---
@@ -340,11 +348,11 @@ end
 -- @param init_options Table of options to be passed to the language server for
 --   initialization.
 -- @name start
-function M.start(cmd, init_options)
+function M.start(cmd, cwd, init_options)
   local lexer = buffer:get_lexer()
   if M.servers[lexer] then return end -- already running
   M.servers[lexer] = true -- sentinel until initialization is complete
-  local ok, server = pcall(Server.new, cmd, init_options)
+  local ok, server = pcall(Server.new, cmd, cwd, init_options)
   M.servers[lexer] = ok and server or nil
   assert(ok, server)
   -- Send file opened notifications for open files.
@@ -386,7 +394,8 @@ end
 -- Jumps to the given LSP Location structure.
 -- @param location LSP Location to jump to.
 local function goto_location(location)
-  local filename = location.uri:gsub('^file:///?', '')
+  local filename = location.uri:gsub(not WIN32 and '^file://' or '^file:///',
+                                     '')
   filename = filename:gsub('%%(%x%x)', function(hex)
     return string.char(tonumber(hex, 16))
   end)
@@ -416,7 +425,8 @@ local function goto_selected_symbol(symbols)
         range = range
       }
     end
-    local filename = symbol.location.uri:gsub('^file:///?', '')
+    local filename = symbol.location.uri:gsub(not WIN32 and '^file://' or
+                                              '^file:///', '')
     filename = filename:gsub('%%(%x%x)', function(hex)
       return string.char(tonumber(hex, 16))
     end)
@@ -427,7 +437,6 @@ local function goto_selected_symbol(symbols)
   local button, i = ui.dialogs.filteredlist{
     title = 'Goto Symbol', columns = {'Name', 'Kind', 'Location'}, items = items
   }
-  ui.dialogs.msgbox{title = i..' '..symbols[i].name}
   if button == -1 then return end
   -- Jump to the selected symbol.
   goto_location(symbols[i].location)
@@ -475,20 +484,27 @@ textadept.editing.autocompleters.lsp = function()
     local symbols = {}
     for i = 1, #completions do
       local symbol = completions[i]
-      -- TODO: some symbol.labels can have spaces and need proper handling.
-      symbols[#symbols + 1] = string.format('%s?%d', symbol.label,
+      local label = symbol.textEdit and symbol.textEdit.newText or
+                    symbol.insertText or symbol.label
+      -- TODO: some labels can have spaces and need proper handling.
+      symbols[#symbols + 1] = string.format('%s?%d', label,
                                             xpm_map[symbol.kind])
-      if symbol.preselect then symbols.selected = symbol.label end
+      -- TODO: if symbol.preselect then symbols.selected = label end?
     end
     -- Return the autocompletion list.
     local len_entered
     if symbols[1].textEdit then
-      len_entered = #symbols[1].label - #symbols[1].textEdit.newText
+      local range = symbols[1].textEdit.range
+      local s = buffer:position_from_line(range.start.line) +
+                range.start.character
+      local e = buffer:position_from_line(range['end'].line) +
+                range['end'].character
+      len_entered = e - s
     else
       local s = buffer:word_start_position(buffer.current_pos, true)
       len_entered = buffer.current_pos - s
     end
-    return len_entered, symbols, symbols.selected -- TODO: symbol.selected unused
+    return len_entered, symbols
   end
 end
 
@@ -513,6 +529,7 @@ function M.hover(position)
       end
       contents = contents.value or table.concat(contents, '\n')
     end
+    if contents == '' then return end
     buffer:call_tip_show(position or buffer.current_pos, contents)
   end
 end
@@ -581,7 +598,8 @@ local function goto_definition(kind)
         -- Select one from a filteredlist.
         local items = {}
         for i = 1, #location do
-          local filename = location[i].uri:gsub('^file:///?', '')
+          local filename = location[i].uri:gsub(not WIN32 and '^file://' or
+                                                '^file:///', '')
           if WIN32 then filename = filename:gsub('/', '\\') end
           items[#items + 1] = filename
         end
@@ -623,7 +641,8 @@ function M.find_references()
     for i = 1, #locations do
       -- Print trailing ': ' to enable 'find in files' features like
       -- double-click, menu items, Return keypress, etc.
-      local filename = location[i].uri:gsub('^file:///?', '')
+      local filename = location[i].uri:gsub(not WIN32 and '^file://' or
+                                            '^file:///', '')
       if WIN32 then filename = filename:gsub('/', '\\') end
       ui._print(_L['[Files Found Buffer]'],
                 string.format('%s:%d: ', filename,
