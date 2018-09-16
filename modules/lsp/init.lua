@@ -30,6 +30,10 @@ local json = require('lsp.dkjson')
 -- @field log_rpc (bool)
 --   Log RPC correspondence to the LSP message buffer.
 --   The default value is `false`.
+-- @field INDIC_WARN (number)
+--   The warning diagnostic indicator number.
+-- @field INDIC_ERROR (number)
+--   The error diagnostic indicator number.
 module('_M.lsp')]]
 local M = {}
 
@@ -64,6 +68,8 @@ if _L['_Language Server']:find('^No Localization') then
 end
 
 M.log_rpc = false
+M.INDIC_WARN = _SCINTILLA.next_indic_number()
+M.INDIC_ERROR = _SCINTILLA.next_indic_number()
 
 ---
 -- Map of lexer languages to active LSP servers.
@@ -129,7 +135,8 @@ function Server.new(cmd, cwd, init_options)
   ui._print('[LSP]', 'Starting language server: '..cmd)
   ui.goto_view(current_view)
   local server = setmetatable({request_id = 0}, {__index = Server})
-  server.proc = assert(spawn(cmd, cwd, function(output) server:log(output) end,
+  server.proc = assert(spawn(cmd, cwd,
+                             function(output) server:handle_stdout(output) end,
                              function(output) server:log(output) end,
                              function(status)
                                server:log('Server exited with status '..status)
@@ -270,6 +277,27 @@ function Server:respond(id, result)
 end
 
 ---
+-- Processes unsolicited, incoming stdout from the Language Server, primarily to
+-- look for notifications and act on them.
+-- @param output String stdout from the Language Server.
+function Server:handle_stdout(output)
+  if output:find('^Content%-Length:') then
+    local len = tonumber(output:match('^Content%-Length: (%d+)'))
+    local _, _, e = output:find('\r\n\r\n()')
+    local message = json.decode(output:sub(e, e + len))
+    if not message.id then
+      self:handle_notification(message.method, message.params)
+    else
+      self:log('Ignoring incoming server request: '..message.method)
+    end
+    self:handle_stdout(output:sub(e + len + 1)) -- process any other messages
+  else
+    -- TODO: handle split messages properly (e.g. cache parts)
+    self:log(output)
+  end
+end
+
+---
 -- Silently logs the given message.
 -- @param message String message to log.
 function Server:log(message)
@@ -277,6 +305,26 @@ function Server:log(message)
   ui.silent_print = true
   ui._print('[LSP]', message)
   ui.silent_print = silent_print -- restore
+end
+
+-- Converts the given LSP DocumentUri into a valid filename and returns it.
+-- @param uri LSP DocumentUri to convert into a filename.
+local function tofilename(uri)
+  local filename = uri:gsub(not WIN32 and '^file://' or '^file:///', '')
+  filename = filename:gsub('%%(%x%x)', function(hex)
+    return string.char(tonumber(hex, 16))
+  end)
+  if WIN32 then filename = filename:gsub('/', '\\') end
+  return filename
+end
+
+-- Returns the start and end buffer positions for the given LSP Range.
+-- @param range LSP Range.
+local function tobufferrange(range)
+  local s = buffer:position_from_line(range.start.line) + range.start.character
+  local e = buffer:position_from_line(range['end'].line) +
+            range['end'].character
+  return s, e
 end
 
 ---
@@ -310,6 +358,26 @@ function Server:handle_notification(method, params)
   elseif method == 'telemetry/event' then
     -- Silently log an event.
     self:log(string.format('TELEMETRY: %s', json.encode(params)))
+  elseif method == 'textDocument/publishDiagnostics' then
+    -- Annotate the buffer based on diagnostics.
+    if buffer.filename ~= tofilename(params.uri) then return end
+    for _, indic in ipairs{M.INDIC_WARN, M.INDIC_ERROR} do
+      buffer.indicator_current = indic
+      buffer:indicator_clear_range(0, buffer.length)
+    end
+    buffer:annotation_clear_all()
+    for i = 1, #params.diagnostics do
+      local diagnostic = params.diagnostics[i]
+      buffer.indicator_current = (not diagnostic.severity or
+                                  diagnostic.severity == 1) and M.INDIC_ERROR or
+                                  M.INDIC_WARN
+      local s, e = tobufferrange(diagnostic.range)
+      buffer:indicator_fill_range(s, e - s)
+      local line = buffer:line_from_position(e)
+      buffer.annotation_text[line] = diagnostic.message
+      buffer.annotation_style[line] = 8 -- error style
+      -- TODO: diagnostics should be persistent in projects
+    end
   else
     -- Unknown notification.
     self:log('unexpected notification: '..method)
@@ -394,18 +462,8 @@ end
 -- Jumps to the given LSP Location structure.
 -- @param location LSP Location to jump to.
 local function goto_location(location)
-  local filename = location.uri:gsub(not WIN32 and '^file://' or '^file:///',
-                                     '')
-  filename = filename:gsub('%%(%x%x)', function(hex)
-    return string.char(tonumber(hex, 16))
-  end)
-  if WIN32 then filename = filename:gsub('/', '\\') end
-  ui.goto_file(filename)
-  local s = buffer:position_from_line(location.range.start.line) +
-            location.range.start.character
-  local e = buffer:position_from_line(location.range['end'].line) +
-            location.range['end'].character
-  buffer:set_sel(e, s)
+  ui.goto_file(tofilename(location.uri))
+  buffer:set_sel(tobufferrange(location.range))
 end
 
 -- Jumps to the symbol selected from a list of LSP SymbolInformation or
@@ -425,13 +483,7 @@ local function goto_selected_symbol(symbols)
         range = range
       }
     end
-    local filename = symbol.location.uri:gsub(not WIN32 and '^file://' or
-                                              '^file:///', '')
-    filename = filename:gsub('%%(%x%x)', function(hex)
-      return string.char(tonumber(hex, 16))
-    end)
-    if WIN32 then filename = filename:gsub('/', '\\') end
-    items[#items + 1] = filename
+    items[#items + 1] = tofilename(symbol.location.uri)
   end
   -- Show the dialog.
   local button, i = ui.dialogs.filteredlist{
@@ -486,7 +538,7 @@ textadept.editing.autocompleters.lsp = function()
       local symbol = completions[i]
       local label = symbol.textEdit and symbol.textEdit.newText or
                     symbol.insertText or symbol.label
-      -- TODO: some labels can have spaces and need proper handling.
+      -- TODO: some labels can have spaces and need proper handling
       symbols[#symbols + 1] = string.format('%s?%d', label,
                                             xpm_map[symbol.kind])
       -- TODO: if symbol.preselect then symbols.selected = label end?
@@ -494,11 +546,7 @@ textadept.editing.autocompleters.lsp = function()
     -- Return the autocompletion list.
     local len_entered
     if symbols[1].textEdit then
-      local range = symbols[1].textEdit.range
-      local s = buffer:position_from_line(range.start.line) +
-                range.start.character
-      local e = buffer:position_from_line(range['end'].line) +
-                range['end'].character
+      local s, e = tobufferrange(symbols[1].textEdit.range)
       len_entered = e - s
     else
       local s = buffer:word_start_position(buffer.current_pos, true)
@@ -564,7 +612,7 @@ function M.signature_help()
   end
 end
 -- Cycle through signatures.
--- TODO: this conflicts with textadept.editing's CALL_TIP_CLICK handler.
+-- TODO: this conflicts with textadept.editing's CALL_TIP_CLICK handler
 events.connect(events.CALL_TIP_CLICK, function(position)
   local server = M.servers[buffer:get_lexer()]
   if server and buffer.filename and
@@ -598,10 +646,7 @@ local function goto_definition(kind)
         -- Select one from a filteredlist.
         local items = {}
         for i = 1, #location do
-          local filename = location[i].uri:gsub(not WIN32 and '^file://' or
-                                                '^file:///', '')
-          if WIN32 then filename = filename:gsub('/', '\\') end
-          items[#items + 1] = filename
+          items[#items + 1] = tofilename(location[i].uri)
         end
         local i = ui.dialogs.filteredlist{
           title = 'Goto Definition', columns = 'File', items = items
@@ -641,11 +686,8 @@ function M.find_references()
     for i = 1, #locations do
       -- Print trailing ': ' to enable 'find in files' features like
       -- double-click, menu items, Return keypress, etc.
-      local filename = location[i].uri:gsub(not WIN32 and '^file://' or
-                                            '^file:///', '')
-      if WIN32 then filename = filename:gsub('/', '\\') end
       ui._print(_L['[Files Found Buffer]'],
-                string.format('%s:%d: ', filename,
+                string.format('%s:%d: ', tofilename(location[i].uri),
                               location[i].range.start.line))
     end
   end
@@ -672,6 +714,14 @@ end)
 events.connect(events.DWELL_END, function()
   local server = M.servers[buffer:get_lexer()]
   if server then buffer:call_tip_cancel() end
+end)
+
+-- Set diagnostic indicator styles.
+events.connect(events.VIEW_NEW, function()
+  buffer.indic_style[M.INDIC_WARN] = buffer.INDIC_SQUIGGLE
+  buffer.indic_fore[M.INDIC_WARN] = buffer.property_int['color.yellow']
+  buffer.indic_style[M.INDIC_ERROR] = buffer.INDIC_SQUIGGLE
+  buffer.indic_fore[M.INDIC_ERROR] = buffer.property_int['color.red']
 end)
 
 -- Add a menu and configure key bindings.
