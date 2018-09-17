@@ -72,10 +72,16 @@ M.INDIC_WARN = _SCINTILLA.next_indic_number()
 M.INDIC_ERROR = _SCINTILLA.next_indic_number()
 
 ---
+-- Map of lexer languages to LSP language server commands or configurations.
+-- Commands are simple string shell commands. Configurations are tables with the
+-- following keys:
+--   * `command`: String shell command used to run the LSP language server.
+--   * `init_options`: Table of initialization options to pass to the language
+--     server in the "initialize" request.
+M.server_commands = {}
+
 -- Map of lexer languages to active LSP servers.
--- @class table
--- @name servers
-M.servers = {}
+local servers = {}
 
 -- Map of LSP CompletionItemKinds to images used in autocompletion lists.
 local xpm_map = {
@@ -124,18 +130,15 @@ local Server = {}
 ---
 -- Starts, initializes, and returns a new language server.
 -- @param cmd String command to start the language server.
--- @param cwd Optional string current working directory (cwd) to start the
---   language server in.
 -- @param init_options Optional table of options to be passed to the language
 --   server for initialization.
-function Server.new(cmd, cwd, init_options)
-  if type(cwd) == 'table' then cwd, init_options = nil, cwd end
+function Server.new(cmd, init_options)
   local root = assert(io.get_project_root(), _L['No project root found'])
   local current_view = view
   ui._print('[LSP]', 'Starting language server: '..cmd)
   ui.goto_view(current_view)
   local server = setmetatable({request_id = 0}, {__index = Server})
-  server.proc = assert(spawn(cmd, cwd,
+  server.proc = assert(spawn(cmd, root,
                              function(output) server:handle_stdout(output) end,
                              function(output) server:log(output) end,
                              function(status)
@@ -291,7 +294,7 @@ function Server:handle_stdout(output)
       self:log('Ignoring incoming server request: '..message.method)
     end
     self:handle_stdout(output:sub(e + len + 1)) -- process any other messages
-  else
+  elseif output:find('^%S+$') then
     -- TODO: handle split messages properly (e.g. cache parts)
     self:log(output)
   end
@@ -372,11 +375,17 @@ function Server:handle_notification(method, params)
                                   diagnostic.severity == 1) and M.INDIC_ERROR or
                                   M.INDIC_WARN
       local s, e = tobufferrange(diagnostic.range)
-      buffer:indicator_fill_range(s, e - s)
       local line = buffer:line_from_position(e)
-      buffer.annotation_text[line] = diagnostic.message
-      buffer.annotation_style[line] = 8 -- error style
-      -- TODO: diagnostics should be persistent in projects
+      local current_line = buffer:line_from_position(buffer.current_pos)
+      if current_line ~= line and current_line + 1 ~= line then
+        -- Assume any diagnostics on the current line or next line are due to an
+        -- incomplete statement during something like an autocompletion,
+        -- signature help, etc. request.
+        buffer:indicator_fill_range(s, e - s)
+        buffer.annotation_text[line] = diagnostic.message
+        buffer.annotation_style[line] = 8 -- error style
+        -- TODO: diagnostics should be persistent in projects.
+      end
     end
   else
     -- Unknown notification.
@@ -412,16 +421,17 @@ end
 
 ---
 -- Starts a language server based on the current language.
--- @param cmd String command to start the language server.
--- @param init_options Table of options to be passed to the language server for
---   initialization.
 -- @name start
-function M.start(cmd, cwd, init_options)
+function M.start()
   local lexer = buffer:get_lexer()
-  if M.servers[lexer] then return end -- already running
-  M.servers[lexer] = true -- sentinel until initialization is complete
-  local ok, server = pcall(Server.new, cmd, cwd, init_options)
-  M.servers[lexer] = ok and server or nil
+  if servers[lexer] then return end -- already running
+  servers[lexer] = true -- sentinel until initialization is complete
+  local cmd, init_options = M.server_commands[lexer], nil
+  if type(cmd) == 'table' then
+    cmd, init_options = cmd.command, cmd.init_options
+  end
+  local ok, server = pcall(Server.new, cmd, init_options)
+  servers[lexer] = ok and server or nil -- replace sentinel
   assert(ok, server)
   -- Send file opened notifications for open files.
   for i = 1, #_BUFFERS do
@@ -436,11 +446,11 @@ end
 -- Stops a running language server based on the current language.
 -- @name stop
 function M.stop()
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if not server then return end
   server:request('shutdown')
   server:notify('exit')
-  M.servers[buffer:get_lexer()] = nil
+  servers[buffer:get_lexer()] = nil
 end
 
 -- Returns a LSP TextDocumentPositionParams structure based on the current
@@ -501,7 +511,7 @@ end
 --   `nil`, symbols are presented from the current buffer.
 -- @name goto_symbol
 function M.goto_symbol(symbol)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if not server or not buffer.filename then return end
   server:sync_buffer()
   local symbols
@@ -520,7 +530,7 @@ end
 
 -- Autocompleter function using a language server.
 textadept.editing.autocompleters.lsp = function()
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities.completionProvider then
     server:sync_buffer()
     -- Fetch a completion list.
@@ -538,7 +548,7 @@ textadept.editing.autocompleters.lsp = function()
       local symbol = completions[i]
       local label = symbol.textEdit and symbol.textEdit.newText or
                     symbol.insertText or symbol.label
-      -- TODO: some labels can have spaces and need proper handling
+      -- TODO: some labels can have spaces and need proper handling.
       symbols[#symbols + 1] = string.format('%s?%d', label,
                                             xpm_map[symbol.kind])
       -- TODO: if symbol.preselect then symbols.selected = label end?
@@ -563,7 +573,7 @@ end
 --   information for. If `nil`, uses the current buffer position.
 -- @name hover
 function M.hover(position)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities.hoverProvider then
     server:sync_buffer()
     local hover = server:request('textDocument/hover',
@@ -589,7 +599,7 @@ local signatures
 -- @name signature_help
 function M.signature_help()
   if buffer:call_tip_active() then events.emit(events.CALL_TIP_CLICK) return end
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and
      server.capabilities.signatureHelpProvider then
     server:sync_buffer()
@@ -612,9 +622,9 @@ function M.signature_help()
   end
 end
 -- Cycle through signatures.
--- TODO: this conflicts with textadept.editing's CALL_TIP_CLICK handler
+-- TODO: this conflicts with textadept.editing's CALL_TIP_CLICK handler.
 events.connect(events.CALL_TIP_CLICK, function(position)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and
      server.capabilities.signatureHelpProvider and signatures and
      signatures.active then
@@ -632,7 +642,7 @@ end)
 -- @param kind String LSP method name part after 'textDocument/' (e.g.
 --   'definition', 'typeDefinition', 'implementation').
 local function goto_definition(kind)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities[kind..'Provider'] then
     server:sync_buffer()
     local location = server:request('textDocument/'..kind,
@@ -676,7 +686,7 @@ function M.goto_implementation() goto_definition('implementation') end
 -- Searches for project references to the current symbol and prints them.
 -- @name find_references
 function M.find_references()
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities.referencesProvider then
     server:sync_buffer()
     local params = get_buffer_position_params
@@ -693,13 +703,18 @@ function M.find_references()
   end
 end
 
+-- Automatically start language servers if possible.
+events.connect(events.LEXER_LOADED, function(lexer)
+  if M.server_commands[lexer] then M.start() end
+end)
+
 -- Notify language servers when files are opened.
 events.connect(events.FILE_OPENED, function(filename)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server then server:notify_opened(buffer) end
 end)
 events.connect(events.FILE_AFTER_SAVE, function(filename, saved_as)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server and saved_as then server:notify_opened(buffer) end
 end)
 
@@ -708,11 +723,11 @@ end)
 -- Query the language server for hover information when mousing over
 -- identifiers.
 events.connect(events.DWELL_START, function(position)
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server then M.hover(position) end
 end)
 events.connect(events.DWELL_END, function()
-  local server = M.servers[buffer:get_lexer()]
+  local server = servers[buffer:get_lexer()]
   if server then buffer:call_tip_cancel() end
 end)
 
@@ -737,7 +752,7 @@ for i = 1, #m_tools - 1 do
       table.insert(m_tools, i, {
         title = _L['_Language Server'],
         {_L['_Start Server...'], function()
-          local server = M.servers[buffer:get_lexer()]
+          local server = servers[buffer:get_lexer()]
           if server then
             ui.dialogs.ok_msgbox{
               title = _L['Start Server'],
@@ -756,7 +771,7 @@ for i = 1, #m_tools - 1 do
           if button == 1 and cmd ~= '' then M.start(cmd) end
         end},
         {_L['Sto_p Server'], function()
-          local server = M.servers[buffer:get_lexer()]
+          local server = servers[buffer:get_lexer()]
           if not server then return end
           local button = ui.dialogs.ok_msgbox{
             title = _L['Stop Server?'],
@@ -768,7 +783,7 @@ for i = 1, #m_tools - 1 do
         end},
         {''},
         {_L['Goto _Workspace Symbol...'], function()
-          local server = M.servers[buffer:get_lexer()]
+          local server = servers[buffer:get_lexer()]
           if not server then return end
           local button, query = ui.dialogs.inputbox{
             title = _L['Query Symbol...'],
