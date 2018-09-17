@@ -7,19 +7,6 @@ local json = require('lsp.dkjson')
 -- A client module for Textadept that communicates over the Language Server
 -- Protocol[1] (LSP) with language servers in order to provide autocompletion,
 -- calltips, go to definition, and more.
--- Textadept can automatically spawn language servers from `events.LEXER_LOADED`
--- events. For example:
---
---     events.connect(events.LEXER_LOADED, function(lexer)
---       if lexer == 'cpp' then
---         _M.lsp.start('cquery', {
---           cacheDirectory = '/tmp/cquery-cache',
---           compilationDatabaseDirectory = '/path/to/project',
---           progressReportFrequencyMs = -1
---         })
---       end
---     end)
---
 -- This module implements version 3.12.0 of the protocol, but does not support
 -- all protocol features. The `Server.new()` function contains the client's
 -- current set of capabilities.
@@ -72,7 +59,8 @@ M.INDIC_WARN = _SCINTILLA.next_indic_number()
 M.INDIC_ERROR = _SCINTILLA.next_indic_number()
 
 ---
--- Map of lexer languages to LSP language server commands or configurations.
+-- Map of lexer languages to LSP language server commands or configurations, or
+-- functions that return either a server command or a configuration.
 -- Commands are simple string shell commands. Configurations are tables with the
 -- following keys:
 --   * `command`: String shell command used to run the LSP language server.
@@ -427,6 +415,7 @@ function M.start()
   if servers[lexer] then return end -- already running
   servers[lexer] = true -- sentinel until initialization is complete
   local cmd, init_options = M.server_commands[lexer], nil
+  if type(cmd) == 'function' then cmd, init_options = cmd() end
   if type(cmd) == 'table' then
     cmd, init_options = cmd.command, cmd.init_options
   end
@@ -613,8 +602,19 @@ function M.signature_help()
     signatures = signatures.signatures
     for i = 1, #signatures do
       local doc = signatures[i].documentation or ''
+      -- Construct calltip text.
       if type(doc) == 'table' then doc = doc.value end -- LSP MarkupContent
       doc = signatures[i].label..'\n'..doc
+      -- Wrap long lines in a rudimentary way.
+      local lines, edge_column = {}, buffer.edge_column
+      if edge_column == 0 then edge_column = 80 end
+      for line in doc:gmatch('[^\n]+') do
+        for i = 1, #line, edge_column do
+          lines[#lines + 1] = line:sub(i, i + edge_column - 1)
+        end
+      end
+      doc = table.concat(lines, '\\\n')
+      -- Add arrow indicators for multiple signatures.
       if #signatures > 1 then doc = '\001'..doc:gsub('\n', '\n\002', 1) end
       signatures[i] = doc
     end
