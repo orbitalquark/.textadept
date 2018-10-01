@@ -248,7 +248,7 @@ end
 -- @param method String method name of the notification.
 -- @param params Table of parameters for the notification.
 function Server:notify(method, params)
-  local message = {jsonrpc = '2.0', method = method, params = params}
+  local message = {jsonrpc = '2.0', method = method, params = params or {}}
   local data = json.encode(message)
   if M.log_rpc then self:log('RPC send: '..data) end
   self.proc:write(string.format('Content-Length: %d\r\n\r\n%s\r\n', #data + 2,
