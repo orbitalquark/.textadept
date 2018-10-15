@@ -126,12 +126,15 @@ function Server.new(cmd, init_options)
   ui._print('[LSP]', 'Starting language server: '..cmd)
   ui.goto_view(current_view)
   local server = setmetatable({request_id = 0}, {__index = Server})
-  server.proc = assert(spawn(cmd, root,
-                             function(output) server:handle_stdout(output) end,
-                             function(output) server:log(output) end,
-                             function(status)
-                               server:log('Server exited with status '..status)
-                             end))
+  server.proc = assert(os.spawn(cmd, root,
+                                function(output)
+                                  server:handle_stdout(output)
+                                end,
+                                function(output) server:log(output) end,
+                                function(status)
+                                  server:log('Server exited with status '..
+                                             status)
+                                end))
   local result = server:request('initialize', {
     processId = json.null,
     rootUri = not WIN32 and 'file://'..root or 'file:///'..root:gsub('\\', '/'),
@@ -737,6 +740,17 @@ events.connect(events.VIEW_NEW, function()
   buffer.indic_fore[M.INDIC_WARN] = buffer.property_int['color.yellow']
   buffer.indic_style[M.INDIC_ERROR] = buffer.INDIC_SQUIGGLE
   buffer.indic_fore[M.INDIC_ERROR] = buffer.property_int['color.red']
+end)
+
+-- Gracefully shutdown language servers on reset. They will be restarted as
+-- buffers are reloaded.
+events.connect(events.RESET_BEFORE, function()
+  for i = 1, #servers do
+    local server = servers[i]
+    server:request('shutdown')
+    server:notify('exit')
+    servers[buffer:get_lexer()] = nil
+  end
 end)
 
 -- Add a menu and configure key bindings.

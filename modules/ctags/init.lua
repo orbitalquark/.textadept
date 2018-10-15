@@ -25,8 +25,8 @@
 -- @field _G.textadept.editing.autocompleters.ctag (function)
 --   Autocompleter function for ctags. (Names only; not context-sensitive).
 -- @field ctags (string)
---    Path to the ctags executable.
---    The default value is `ctags`.
+--   Path to the ctags executable.
+--   The default value is `ctags`.
 module('_M.ctags')]]
 
 local M = {}
@@ -89,7 +89,7 @@ local function find_tags(tag)
     if WIN32 then tmpfile = os.getenv("TEMP")..tmpfile end
     local cmd = string.format('%s -o "%s" "%s"', M.ctags, tmpfile,
                               buffer.filename)
-    spawn(cmd):wait()
+    os.spawn(cmd):wait()
     tag_files = {tmpfile}
     goto retry
   end

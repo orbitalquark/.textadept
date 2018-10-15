@@ -307,7 +307,7 @@ keys[GUI and 'a!' or 'm!'] = function()
   local button, command = ui.dialogs.standard_inputbox{
     title = _L['Command'], informative_text = root
   }
-  if button == 1 then spawn(command, root, ui.print, ui.print) end
+  if button == 1 then os.spawn(command, root, ui.print, ui.print) end
 end
 keys.co = function()
   buffer:line_end()
