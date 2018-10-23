@@ -39,7 +39,7 @@ keys.ck = function()
   end
 end
 keys[GUI and 'ak' or 'mk'] = buffer.copy
-keys.cy = textadept.editing.paste
+keys.cy = require('paste_reindent')
 keys[GUI and 'aD' or 'mD'] = buffer.line_duplicate
 -- buffer.clear is 'del'
 -- TODO: m_edit[_L['D_elete Word']][2]
