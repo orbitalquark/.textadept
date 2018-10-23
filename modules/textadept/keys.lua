@@ -109,6 +109,10 @@ keys["a'"] = textadept.bookmarks.toggle
 -- TODO: m_bookmark[_L['_Next Bookmark']][2]
 -- TODO: m_bookmark[_L['_Previous Bookmark']][2]
 keys['a"'] = textadept.bookmarks.goto_mark
+-- Macros.
+keys.f9 = textadept.macros.start_recording
+keys[GUI and 'sf9' or 'f10'] = textadept.macros.stop_recording
+keys[GUI and 'af9' or 'f12'] = textadept.macros.play
 -- Quick Open.
 local m_quickopen = m_tools[_L['Quick _Open']]
 keys[GUI and 'aU' or 'mU'] = m_quickopen[_L['Quickly Open _User Home']][2]
