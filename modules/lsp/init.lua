@@ -305,13 +305,13 @@ function Server:handle_stdout(output)
   if output:find('^Content%-Length:') then
     local len = tonumber(output:match('^Content%-Length: (%d+)'))
     local _, _, e = output:find('\r\n\r\n()')
-    local message = json.decode(output:sub(e, e + len))
+    local message = json.decode(output:sub(e, e + len - 1))
     if not message.id then
       self:handle_notification(message.method, message.params)
     else
       self:log('Ignoring incoming server request: '..message.method)
     end
-    self:handle_stdout(output:sub(e + len + 1)) -- process any other messages
+    self:handle_stdout(output:sub(e + len)) -- process any other messages
   elseif output:find('^%S+$') then
     -- TODO: handle split messages properly (e.g. cache parts)
     self:log(output)
