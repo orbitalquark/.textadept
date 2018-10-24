@@ -42,6 +42,11 @@ local json = require('lsp.dkjson')
 --   The warning diagnostic indicator number.
 -- @field INDIC_ERROR (number)
 --   The error diagnostic indicator number.
+-- @field show_all_diagnostics (bool)
+--   Whether or not to show all diagnostics.
+--   The default value is `false`, and assumes any diagnostics on the current
+--   line or next line are due to an incomplete statement during something like
+--   an autocompletion, signature help, etc. request.
 module('_M.lsp')]]
 local M = {}
 
@@ -81,6 +86,8 @@ events.LSP_NOTIFICATION = 'lsp_notification'
 M.log_rpc = false
 M.INDIC_WARN = _SCINTILLA.next_indic_number()
 M.INDIC_ERROR = _SCINTILLA.next_indic_number()
+
+M.show_all_diagnostics = false
 
 ---
 -- Map of lexer languages to LSP language server commands or configurations, or
@@ -395,10 +402,8 @@ function Server:handle_notification(method, params)
       local s, e = tobufferrange(diagnostic.range)
       local line = buffer:line_from_position(e)
       local current_line = buffer:line_from_position(buffer.current_pos)
-      if current_line ~= line and current_line + 1 ~= line then
-        -- Assume any diagnostics on the current line or next line are due to an
-        -- incomplete statement during something like an autocompletion,
-        -- signature help, etc. request.
+      if M.show_all_diagnostics or
+         (current_line ~= line and current_line + 1 ~= line) then
         buffer:indicator_fill_range(s, e - s)
         buffer.annotation_text[line] = diagnostic.message
         buffer.annotation_style[line] = 8 -- error style
