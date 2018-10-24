@@ -142,11 +142,11 @@ function Server.new(cmd, init_options)
     capabilities = {
       --workspace = nil,
       textDocument = {
-        --synchronization = {
+        synchronization = {
         --  willSave = true,
         --  willSaveWaitUntil = true,
-        --  didSave = true,
-        --},
+          didSave = true,
+        },
         completion = {
           completionItem = {
             --snippetSupport = false, -- ${1:foo} format not supported
@@ -718,7 +718,16 @@ events.connect(events.FILE_OPENED, function(filename)
 end)
 events.connect(events.FILE_AFTER_SAVE, function(filename, saved_as)
   local server = servers[buffer:get_lexer()]
-  if server and saved_as then server:notify_opened(buffer) end
+  if not server then return end
+  if saved_as then
+    server:notify_opened(buffer)
+  else
+    server:notify('textDocument/didSave', {textDocument = {
+      uri = not WIN32 and 'file://'..buffer.filename or
+        'file:///'..buffer.filename:gsub('\\', '/'),
+      languageId = buffer:get_lexer(), version = 0
+    }})
+  end
 end)
 
 -- TODO: textDocument/didClose
