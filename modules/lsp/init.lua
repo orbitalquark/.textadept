@@ -23,6 +23,18 @@ local json = require('lsp.dkjson')
 --
 --   * _`lexer`_: The lexer language of the LSP.
 --   * _`server`_: The LSP server.
+-- @field _G.events.LSP_NOTIFICATION (string)
+--   Emitted when an LSP server emits an unhandled notification.
+--   This is useful for handling server-specific notifications. Responses can be
+--   sent via [`Server:respond()`]().
+--   An event handler should return `true`.
+--   Arguments:
+--
+--   * _`lexer`_: The lexer language of the LSP.
+--   * _`server`_: The LSP server.
+--   * _`method`_: The string LSP notification method name.
+--   * _`params`_: The table of LSP notification params. Contents may be
+--     server-specific.
 -- @field log_rpc (bool)
 --   Log RPC correspondence to the LSP message buffer.
 --   The default value is `false`.
@@ -64,6 +76,7 @@ if _L['_Language Server']:find('^No Localization') then
 end
 
 events.LSP_INITIALIZED = 'lsp_initialized'
+events.LSP_NOTIFICATION = 'lsp_notification'
 
 M.log_rpc = false
 M.INDIC_WARN = _SCINTILLA.next_indic_number()
@@ -128,15 +141,17 @@ local Server = {}
 
 ---
 -- Starts, initializes, and returns a new language server.
+-- @param lexer Lexer language of the language server.
 -- @param cmd String command to start the language server.
 -- @param init_options Optional table of options to be passed to the language
 --   server for initialization.
-function Server.new(cmd, init_options)
+function Server.new(lexer, cmd, init_options)
   local root = assert(io.get_project_root(), _L['No project root found'])
   local current_view = view
   ui._print('[LSP]', 'Starting language server: '..cmd)
   ui.goto_view(current_view)
-  local server = setmetatable({request_id = 0}, {__index = Server})
+  local server = setmetatable({lexer = lexer, request_id = 0},
+                              {__index = Server})
   server.proc = assert(os.spawn(cmd, root,
                                 function(output)
                                   server:handle_stdout(output)
@@ -205,7 +220,7 @@ function Server.new(cmd, init_options)
   })
   server.capabilities = result.capabilities
   server:notify('initialized') -- required by protocol
-  events.emit(events.LSP_INITIALIZED, buffer:get_lexer(), server)
+  events.emit(events.LSP_INITIALIZED, server.lexer, server)
   return server
 end
 
@@ -390,7 +405,8 @@ function Server:handle_notification(method, params)
         -- TODO: diagnostics should be persistent in projects.
       end
     end
-  else
+  elseif not events.emit(events.LSP_NOTIFICATION, self.lexer, self, method,
+                         params) then
     -- Unknown notification.
     self:log('unexpected notification: '..method)
   end
@@ -434,7 +450,7 @@ function M.start()
   if type(cmd) == 'table' then
     cmd, init_options = cmd.command, cmd.init_options
   end
-  local ok, server = pcall(Server.new, cmd, init_options)
+  local ok, server = pcall(Server.new, lexer, cmd, init_options)
   servers[lexer] = ok and server or nil -- replace sentinel
   assert(ok, server)
   -- Send file opened notifications for open files.
