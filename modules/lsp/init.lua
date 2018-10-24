@@ -14,6 +14,15 @@ local json = require('lsp.dkjson')
 -- [1]: https://microsoft.github.io/language-server-protocol/specification
 -- @field _G.textadept.editing.autocompleters.lsp (function)
 --   Autocompleter function for a language server.
+-- @field _G.events.LSP_INITIALIZED (string)
+--   Emitted when an LSP connection has been initialized.
+--   This is useful for sending server-specific notifications to the server upon
+--   init via [`Server:notify()`]().
+--   Emitted by [`start()`]().
+--   Arguments:
+--
+--   * _`lexer`_: The lexer language of the LSP.
+--   * _`server`_: The LSP server.
 -- @field log_rpc (bool)
 --   Log RPC correspondence to the LSP message buffer.
 --   The default value is `false`.
@@ -53,6 +62,8 @@ if _L['_Language Server']:find('^No Localization') then
   _L['Goto _Implementation'] = 'Goto _Implementation'
   _L['Find _References'] = 'Find _References'
 end
+
+events.LSP_INITIALIZED = 'lsp_initialized'
 
 M.log_rpc = false
 M.INDIC_WARN = _SCINTILLA.next_indic_number()
@@ -194,6 +205,7 @@ function Server.new(cmd, init_options)
   })
   server.capabilities = result.capabilities
   server:notify('initialized') -- required by protocol
+  events.emit(events.LSP_INITIALIZED, buffer:get_lexer(), server)
   return server
 end
 
