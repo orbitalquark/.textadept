@@ -725,7 +725,7 @@ function M.find_references()
   local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities.referencesProvider then
     server:sync_buffer()
-    local params = get_buffer_position_params
+    local params = get_buffer_position_params()
     params.context = {includeDeclaration = true}
     local locations = server:request('textDocument/references', params)
     if not locations or #locations == 0 then return end
@@ -733,8 +733,8 @@ function M.find_references()
       -- Print trailing ': ' to enable 'find in files' features like
       -- double-click, menu items, Return keypress, etc.
       ui._print(_L['[Files Found Buffer]'],
-                string.format('%s:%d: ', tofilename(location[i].uri),
-                              location[i].range.start.line))
+                string.format('%s:%d: ', tofilename(locations[i].uri),
+                              locations[i].range.start.line))
     end
   end
 end
