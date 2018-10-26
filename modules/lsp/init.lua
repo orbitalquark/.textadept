@@ -674,16 +674,18 @@ events.connect(events.CALL_TIP_CLICK, function(position)
   end
 end)
 
--- Jumps to the definition of the current kind (e.g. symbol, type, interface).
+-- Jumps to the definition of the current kind (e.g. symbol, type, interface),
+-- returning whether or not a definition was found.
 -- @param kind String LSP method name part after 'textDocument/' (e.g.
 --   'definition', 'typeDefinition', 'implementation').
+-- @return `true` if a definition was found; `false` otherwise
 local function goto_definition(kind)
   local server = servers[buffer:get_lexer()]
   if server and buffer.filename and server.capabilities[kind..'Provider'] then
     server:sync_buffer()
     local location = server:request('textDocument/'..kind,
                                     get_buffer_position_params())
-    if not location or not location.uri and #location == 0 then return end
+    if not location or not location.uri and #location == 0 then return false end
     if not location.uri then
       -- List of LSP Locations, instead of a single Location.
       if #location == 1 then
@@ -697,26 +699,35 @@ local function goto_definition(kind)
         local i = ui.dialogs.filteredlist{
           title = 'Goto Definition', columns = 'File', items = items
         }
-        if i == -1 then return end
+        if i == -1 then return true end -- definition found; user cancelled
         location = location[i]
       end
     end
     goto_location(location)
+    return true
+  else
+    return false
   end
 end
 
 ---
--- Jumps to the definition of the current symbol.
+-- Jumps to the definition of the current symbol, returning whether or not a
+-- definition was found.
+-- @return `true` if a definition was found; `false` otherwise.
 -- @name goto_definition
-function M.goto_definition() goto_definition('definition') end
+function M.goto_definition() return goto_definition('definition') end
 ---
--- Jumps to the definition of the current type.
+-- Jumps to the definition of the current type, returning whether or not a
+-- definition was found.
+-- @return `true` if a definition was found; `false` otherwise.
 -- @name goto_type_definition
-function M.goto_type_definition() goto_definition('typeDefinition') end
+function M.goto_type_definition() return goto_definition('typeDefinition') end
 ---
--- Jumps to the implementation of the current symbol.
+-- Jumps to the implementation of the current symbol, returning whether or not
+-- an implementation was found.
+-- @return `true` if an implementation was found; `false` otherwise.
 -- @name goto_implementation
-function M.goto_implementation() goto_definition('implementation') end
+function M.goto_implementation() return goto_definition('implementation') end
 
 ---
 -- Searches for project references to the current symbol and prints them.
