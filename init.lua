@@ -18,23 +18,20 @@ buffer.edge_column = 80
 
 -- Settings for Textadept development.
 io.quick_open_filters[_HOME] = {
-  extensions = {
-    'a', 'o', 'so', 'dll', 'zip', 'tgz', 'gz', 'exe', 'osx', 'orig', 'rej'
-  },
-  folders = {
-    '%.hg$',
-    'doc/api', 'doc/book',
-    'gtdialog/cdk',
-    'images',
-    'lua/doc', 'lua/src/lib/lpeg', 'lua/src/lib/lfs',
-    'modules/yaml/src',
-    'releases',
-    'scintilla/cocoa', 'scintilla/doc', 'scintilla/lexers', 'scintilla/lua',
-    'scintilla/qt', 'scintilla/scripts', 'scintilla/test', 'scintilla/win32',
-    'src/cdk', 'src/win.*', 'src/gtkosx', 'src/termkey'
-  },
-  'textadept$',
-  'textadept-curses'
+  -- Extensions to exclude.
+  '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx',
+  '!.orig', '!.rej',
+  -- Folders to exclude.
+  '![/\\]%.hg$',
+  '!doc/api', '!doc/book',
+  '!gtdialog/cdk',
+  '!images',
+  '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
+  '!modules/yaml/src',
+  '!releases',
+  '!scintilla/cocoa', '!scintilla/doc', '!scintilla/lexers', '!scintilla/lua',
+  '!scintilla/qt', '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
+  '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
 }
 ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
 textadept.run.build_commands[_HOME] = function()
@@ -46,8 +43,8 @@ end
 
 -- Filter for ~/.textadept.
 io.quick_open_filters[_USERHOME] = {
-  extensions = {'a', 'o', 'so', 'dll', 'zip', 'tgz', 'gz'},
-  folders = {'%.hg$', 'spellcheck/hunspell'}
+  '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', -- extensions
+  '![/\\]%.hg$', '!spellcheck/hunspell' -- folders
 }
 
 -- Hide margins when writing e-mails and commit messages.
