@@ -1,4 +1,4 @@
--- Copyright 2014-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2014-2019 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 -- A special environment for a Lua REPL.
 -- It has an `__index` metafield for accessing Textadept's global environment.

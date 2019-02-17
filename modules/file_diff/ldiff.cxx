@@ -1,4 +1,4 @@
-// Copyright 2017-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
+// Copyright 2017-2019 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 #include "diff_match_patch.h"
 
