@@ -74,7 +74,7 @@ local function find_tags(tag)
       if tag then
         if not file:find('^%a?:?[/\\]') then file = dir..file end
         if ex_cmd:find('^/') then ex_cmd = ex_cmd:match('^/^?(.-)$?/$') end
-        tags[#tags + 1] = {tag, file, ex_cmd, ext_fields}
+        tags[#tags + 1] = {tag, file:gsub('\\\\', '\\'), ex_cmd, ext_fields}
         found = true
       elseif found then
         break -- tags are sorted, so no more matches exist in this file
