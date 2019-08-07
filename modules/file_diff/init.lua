@@ -40,6 +40,7 @@ if _L['_Compare Files']:find('^No Localization') then
   _L['_Compare Files'] = '_Compare Files'
   _L['_Compare Files...'] = '_Compare Files...'
   _L['Compare This File _With...'] = 'Compare This File _With...'
+  _L['Compare _Buffers'] = 'Compare _Buffers'
   _L['_Next Change'] = '_Next Change'
   _L['_Previous Change'] = '_Previous Change'
   _L['Merge _Left'] = 'Merge _Left'
@@ -188,10 +189,10 @@ local starting_diff = false
 ---
 -- Highlight differences between files *file1* and *file2*, or the user-selected
 -- files.
--- @param file1 Optional name of the older file. If `nil`, the user is prompted
---   for a file.
--- @param file2 Optional name of the newer file. If `nil`, the user is prompted
---   for a file.
+-- @param file1 Optional name of the older file. If `-`, uses the current
+--   buffer. If `nil`, the user is prompted for a file.
+-- @param file2 Optional name of the newer file. If `-`, uses the current
+--   buffer. If `nil`, the user is prompted for a file.
 -- @param horizontal Optional flag specifying whether or not to split the view
 --   horizontally. The default value is `false`, diff'ing the two files
 --   side-by-side.
@@ -210,18 +211,22 @@ function M.start(file1, file2, horizontal)
   }
   if not file2 then return end
   starting_diff = true
+  if not _VIEWS[view1] or not _VIEWS[view2] and #_VIEWS > 1 then
+    view1, view2 = _VIEWS[1], _VIEWS[2] -- preserve current split views
+  end
   if _VIEWS[view1] and view ~= view1 then ui.goto_view(view1) end
-  io.open_file(file1)
+  if file1 ~= '-' then io.open_file(file1) end
   buffer.annotation_visible = buffer.ANNOTATION_STANDARD -- view1
   if not _VIEWS[view1] or not _VIEWS[view2] then
     view1, view2 = view:split(not horizontal)
   else
     ui.goto_view(view2)
   end
-  io.open_file(file2)
+  if file2 ~= '-' then io.open_file(file2) end
   buffer.annotation_visible = buffer.ANNOTATION_STANDARD -- view2
   ui.goto_view(view1)
   starting_diff = false
+  if file1 == '-' or file2 == '-' then mark_changes() end
 end
 
 -- Stops diff'ing.
@@ -453,6 +458,7 @@ for i = 1, #m_tools - 1 do
         {_L['Compare This File _With...'], function()
           if buffer.filename then M.start(buffer.filename) end
         end},
+        {_L['Compare _Buffers'], function() M.start('-', '-') end},
         {''},
         {_L['_Next Change'], function() M.goto_change(true) end},
         {_L['_Previous Change'], M.goto_change},
@@ -466,6 +472,7 @@ for i = 1, #m_tools - 1 do
 end
 local GUI = not CURSES
 keys.f8 = M.start
+keys.sf8 = function() M.start('-', '-') end
 keys[GUI and 'adown'
          or 'mdown'] = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 keys[GUI and 'aup' or 'mup'] = M.goto_change
