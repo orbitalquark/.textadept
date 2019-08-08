@@ -75,6 +75,17 @@ table.insert(m_file, #m_file - 1, {'Hg Diff', function()
   buffer:set_save_point()
 end})
 
+-- Run shell commands at project root.
+local m_tools = textadept.menu.menubar[_L['_Tools']]
+table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
+  local root = io.get_project_root()
+  if not root then return end
+  local button, command = ui.dialogs.standard_inputbox{
+    title = _L['Command'], informative_text = root
+  }
+  if button == 1 then os.spawn(command, root, ui.print, ui.print) end
+end})
+
 -- Find in project module.
 require('find_in_project')
 local m_search = textadept.menu.menubar[_L['_Search']]

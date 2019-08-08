@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuv  yz~\]^_
--- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~ @#$%^&*()-=+[]{}\ ;       / \b~
+-- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\;       / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -307,14 +307,6 @@ keys[GUI and 'ag' or 'mg'] = setmetatable({}, {__index = function(_, k)
   return goto_char
 end})
 keys[GUI and 'aG' or 'mG'] = goto_char
-keys[GUI and 'a!' or 'm!'] = function()
-  local root = io.get_project_root()
-  if not root then return end
-  local button, command = ui.dialogs.standard_inputbox{
-    title = _L['Command'], informative_text = root
-  }
-  if button == 1 then os.spawn(command, root, ui.print, ui.print) end
-end
 keys.co = function()
   buffer:line_end()
   buffer:new_line()
