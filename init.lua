@@ -75,6 +75,11 @@ table.insert(m_file, #m_file - 1, {'Hg Diff', function()
   buffer:set_save_point()
 end})
 
+-- Find in project module.
+require('find_in_project')
+local m_search = textadept.menu.menubar[_L['_Search']]
+keys[not CURSES and 'aS' or 'mS'] = m_search[_L['Find in Pro_ject']][2]
+
 -- Ctags module.
 _M.ctags = require('ctags')
 _M.ctags[_HOME] = _HOME..'/src/tags'
@@ -94,6 +99,7 @@ _M.spellcheck = require('spellcheck')
 -- File diff module.
 _M.file_diff = require('file_diff')
 --keys.f8 = _M.file_diff.start
+--keys.sf8 = m_tools[_L['_Compare Files']][_L['Compare _Buffers']][2]
 --keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 --keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
 --keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]

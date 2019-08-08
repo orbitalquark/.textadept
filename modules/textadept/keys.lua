@@ -84,7 +84,10 @@ keys[GUI and 'as' or 'ms'] = m_search[_L['_Find']][2]
 -- Find Prev is ap when find pane is focused in GUI.
 -- Replace is ar when find pane is focused in GUI.
 -- Replace All is aa when find pane is focused in GUI.
-keys.cs = ui.find.find_incremental
+keys.cs = function()
+  ui.find.in_files = false
+  ui.find.find_incremental()
+end
 -- TODO: m_search[_L['Find in Fi_les']][2]
 -- Find in Files is ai when find pane is focused in GUI.
 -- TODO: m_search[_L['Goto Nex_t File Found']][2]
@@ -301,10 +304,6 @@ keys[GUI and 'ag' or 'mg'] = setmetatable({}, {__index = function(_, k)
     end
   end
 end})
-keys[GUI and 'aS' or 'mS'] = function()
-  ui.command_entry.enter_mode('find_in_project')
-  ui.statusbar_text = 'Find in project'
-end
 keys[GUI and 'a!' or 'm!'] = function()
   local root = io.get_project_root()
   if not root then return end
@@ -432,33 +431,6 @@ setmetatable(keys.find_incremental, {__index = function(_, k)
                if #k > 1 and k:find('^[cams]*.+$') then return end
                ui.find.find_incremental(ui.command_entry:get_text()..k, true)
              end})
-keys.find_in_project = {
-  paths = {}, -- for per-project search path mappings
-  ['\n'] = function()
-    return ui.command_entry.finish_mode(function(text)
-      local root = io.get_project_root()
-      if not root or text == '' then return end
-      ui.find.find_entry_text = text
-      local match_case, in_files = ui.find.match_case, ui.find.in_files
-      ui.find.match_case, ui.find.in_files = true, true
-      ui.find.find_in_files(keys.find_in_project.paths[root] or root)
-      ui.find.match_case, ui.find.in_files = match_case, in_files -- restore
-    end)
-  end,
-  [GUI and 'am' or 'mm'] = function()
-    ui.find.match_case = not ui.find.match_case
-    ui.statusbar_text = 'Match case '..(ui.find.match_case and 'on' or 'off')
-    ui.find.find_incremental(ui.command_entry:get_text(), true)
-  end,
-  [GUI and 'aw' or 'mw'] = function()
-    ui.find.whole_word = not ui.find.whole_word
-    ui.statusbar_text = 'Whole word '..(ui.find.whole_word and 'on' or 'off')
-  end,
-  [GUI and 'ax' or 'mx'] = function()
-    ui.find.regex = not ui.find.regex
-    ui.statusbar_text = 'Regex '..(ui.find.regex and 'on' or 'off')
-  end,
-}
 -- Show documentation for symbols in the Lua command entry.
 keys.lua_command['a?'] = function()
   -- Temporarily change _G.buffer since ui.command_entry is the "active" buffer.
