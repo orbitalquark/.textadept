@@ -7,12 +7,12 @@ textadept.file_types.extensions.luadoc = 'lua'
 
 if not CURSES then
   buffer:set_theme(LINUX and 'dark' or 'light',
-                   {font = 'DejaVu Sans Mono', fontsize = 15})
+                   {font = 'DejaVu Sans Mono', fontsize = 16})
 end
 buffer.h_scroll_bar = false
 buffer.v_scroll_bar = false
 buffer.caret_period = 0
-buffer.caret_style = buffer.CARETSTYLE_BLOCK
+buffer.caret_style = buffer.CARETSTYLE_BLOCK | buffer.CARETSTYLE_BLOCK_AFTER
 buffer.edge_mode = not CURSES and buffer.EDGE_LINE or buffer.EDGE_BACKGROUND
 buffer.edge_column = 80
 
