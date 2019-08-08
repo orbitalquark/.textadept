@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jklm o qrstuv  yz~\]^_
--- a:  aA  cC  eE   G  iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~ @#$%^&*()-=+[]{}\ ;       / \b~
+-- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~ @#$%^&*()-=+[]{}\ ;       / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -287,23 +287,26 @@ keys['c]'] = buffer.swap_main_anchor_caret
 keys[GUI and 'aW' or 'mW'] = function()
   buffer:drop_selection_n(buffer.selections - 1)
 end
-keys[GUI and 'ag' or 'mg'] = setmetatable({}, {__index = function(_, k)
-  if #k > 1 then return end
-  return function()
-    -- Go to character.
-    local pos = buffer.current_pos
-    buffer.target_start = pos + 1
-    buffer.target_end = buffer.line_end_position[buffer:line_from_position(pos)]
-    buffer.search_flags = buffer.FIND_MATCHCASE
-    if buffer:search_in_target(k) > 0 then
-      if buffer.move_extends_selection then
-        buffer.current_pos = buffer.target_start
-      else
-        buffer:goto_pos(buffer.target_start)
-      end
+local char = ' '
+local function goto_char()
+  local pos = buffer.current_pos
+  buffer.target_start = pos + 1
+  buffer.target_end = buffer.line_end_position[buffer:line_from_position(pos)]
+  buffer.search_flags = buffer.FIND_MATCHCASE
+  if buffer:search_in_target(char) > 0 then
+    if buffer.move_extends_selection then
+      buffer.current_pos = buffer.target_start
+    else
+      buffer:goto_pos(buffer.target_start)
     end
   end
+end
+keys[GUI and 'ag' or 'mg'] = setmetatable({}, {__index = function(_, k)
+  if #k > 1 then return end
+  char = k
+  return goto_char
 end})
+keys[GUI and 'aG' or 'mG'] = goto_char
 keys[GUI and 'a!' or 'm!'] = function()
   local root = io.get_project_root()
   if not root then return end
@@ -350,6 +353,7 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
 end)
 
+--keys[GUI and 'aS' or 'mS'] = m_search[_L['Find in Pro_ject']][2]
 --keys[GUI and 'a.' or 'm,'] = _M.ctags.goto_tag
 --keys[GUI and 'a,' or 'm,'] = m_search['_Ctags']['Jump Back']
 --keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
