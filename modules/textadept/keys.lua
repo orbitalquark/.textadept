@@ -6,7 +6,7 @@
 module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
--- ca: a cdefg~~jklm o qrstuv  yz~\]^_
+-- ca: a cdefg~~jk m o qrstuv  yz~\]^_
 -- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~ @#$%^&*()-=+[]{}\ ;       / \b~
 
 local keys, GUI = keys, not CURSES
@@ -333,6 +333,10 @@ end
 keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
 keys[GUI and 'a>' or 'm>'] = function() buffer:line_scroll(20, 0) end
 keys.f10 = function() ui.maximized = not ui.maximized end
+keys.cal = function()
+  if #_VIEWS == 1 then return end
+  view.size = ui.size[ui.get_split_table().vertical and 1 or 2] / 2
+end
 
 -- Language modules or LSP.
 events.connect(events.LEXER_LOADED, function(lang)
