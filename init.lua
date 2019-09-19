@@ -395,6 +395,6 @@ events.connect(events.LEXER_LOADED, function(lexer)
   _M.lua.expr_types['^love%.thread%.newThread%('] = 'Thread'
   _M.lua.expr_types['^love%.thread%.getChannel%('] = 'Channel'
   _M.lua.expr_types['^love%.thread%.newChannel%('] = 'Channel'
-  -- REPL.
-  _M.repl = require('lua.repl')
 end)
+-- Lua REPL.
+require('lua.repl')
