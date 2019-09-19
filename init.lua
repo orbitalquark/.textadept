@@ -59,15 +59,20 @@ events.connect(events.FILE_OPENED, function(filename)
   end
 end)
 
--- Mercurial diff of current file.
+-- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['_File']]
 table.insert(m_file, #m_file - 1, {''})
-table.insert(m_file, #m_file - 1, {'Hg Diff', function()
+table.insert(m_file, #m_file - 1, {'VCS Diff', function()
   local root = io.get_project_root()
   if not buffer.filename or not root then return end
-  local p = io.popen('hg diff -R "'..root..'" "'..buffer.filename..'"')
-  local diff = p:read('*a')
-  p:close()
+  local diff
+  if lfs.attributes(root..'/.hg') then
+    diff = os.spawn('hg diff "'..buffer.filename..'"', root):read('a')
+  elseif lfs.attributes(root..'/.git') then
+    diff = os.spawn('git diff "'..buffer.filename..'"', root):read('a')
+  else
+    return
+  end
   local buffer = buffer.new()
   buffer:set_lexer('diff')
   buffer:add_text(diff)
