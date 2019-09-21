@@ -46,7 +46,7 @@ for i = 1, #m_search do
       if not io.get_project_root() then
         ui.dialogs.msgbox{
           title = _L['No project found'],
-          informative_text = _L['The current file does not belong to a project']
+          text = _L['The current file does not belong to a project']
         }
         return
       end

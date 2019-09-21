@@ -364,8 +364,7 @@ function Server:handle_notification(method, params)
     -- Show a message to the user.
     local icons = {'gtk-dialog-error', 'gtk-dialog-warning', 'gtk-dialog-info'}
     local dialog_options = {
-      icon = icons[params.type], informative_text = params.message,
-      string_output = true
+      icon = icons[params.type], text = params.message, string_output = true
     }
     if not method:find('Request') then
       ui.dialogs.ok_msgbox(dialog_options)
@@ -823,8 +822,8 @@ for i = 1, #m_tools - 1 do
           if server then
             ui.dialogs.ok_msgbox{
               title = _L['Start Server'],
-              informative_text = buffer:get_lexer()..' '..
-                                 _L['language server is already running'],
+              text = buffer:get_lexer()..' '..
+                     _L['language server is already running'],
               no_cancel = true
             }
             return
@@ -842,9 +841,8 @@ for i = 1, #m_tools - 1 do
           if not server then return end
           local button = ui.dialogs.ok_msgbox{
             title = _L['Stop Server?'],
-            informative_text = string.format('%s %s?',
-                                             _L['Stop the language server for'],
-                                             buffer:get_lexer())
+            text = string.format('%s %s?', _L['Stop the language server for'],
+                                 buffer:get_lexer())
           }
           if button == 1 then M.stop() end
         end},
