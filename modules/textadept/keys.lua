@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuv  yz~\]^_
--- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\;       / \b~
+-- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\ ;       / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -39,7 +39,7 @@ keys.ck = function()
   end
 end
 keys[GUI and 'ak' or 'mk'] = buffer.copy
-keys.cy = require('paste_reindent')
+keys.cy = textadept.editing.paste_reindent
 keys[GUI and 'aD' or 'mD'] = buffer.line_duplicate
 -- buffer.clear is 'del'
 -- TODO: m_edit[_L['D_elete Word']][2]
