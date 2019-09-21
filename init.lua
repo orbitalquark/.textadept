@@ -51,9 +51,7 @@ io.quick_open_filters[_USERHOME] = {
 events.connect(events.FILE_OPENED, function(filename)
   if filename and
      (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
-    for i = 0, buffer.margins - 1 do
-      buffer.margin_width_n[i] = 0
-    end
+    for i = 0, buffer.margins - 1 do buffer.margin_width_n[i] = 0 end
     buffer.wrap_mode = buffer.WRAP_WHITESPACE
     buffer.edge_mode = buffer.EDGE_NONE
   end
@@ -61,7 +59,7 @@ end)
 
 -- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['_File']]
-table.insert(m_file, #m_file - 1, {''})
+table.insert(m_file, #m_file - 1, {''}) -- before Quit
 table.insert(m_file, #m_file - 1, {'VCS Diff', function()
   local root = io.get_project_root()
   if not buffer.filename or not root then return end
@@ -90,11 +88,6 @@ table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
   }
   if button == 1 then os.spawn(command, root, ui.print, ui.print) end
 end})
-
--- Find in project module.
-require('find_in_project')
-local m_search = textadept.menu.menubar[_L['_Search']]
-keys[not CURSES and 'aS' or 'mS'] = m_search[_L['Find in Pro_ject']][2]
 
 -- Ctags module.
 _M.ctags = require('ctags')

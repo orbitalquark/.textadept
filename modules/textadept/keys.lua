@@ -84,12 +84,12 @@ keys[GUI and 'as' or 'ms'] = m_search[_L['_Find']][2]
 -- Find Prev is ap when find pane is focused in GUI.
 -- Replace is ar when find pane is focused in GUI.
 -- Replace All is aa when find pane is focused in GUI.
+-- Find in Files is ai when find pane is focused in GUI.
 keys.cs = function()
   ui.find.in_files = false
   ui.find.find_incremental()
 end
--- TODO: m_search[_L['Find in Fi_les']][2]
--- Find in Files is ai when find pane is focused in GUI.
+keys[not CURSES and 'aS' or 'mS'] = m_search[_L['Find in Fi_les']][2]
 -- TODO: m_search[_L['Goto Nex_t File Found']][2]
 -- TODO: m_search[_L['Goto Previou_s File Found']][2]
 keys.cg = textadept.editing.goto_line
@@ -349,7 +349,6 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
 end)
 
---keys[GUI and 'aS' or 'mS'] = m_search[_L['Find in Pro_ject']][2]
 --keys[GUI and 'a.' or 'm,'] = _M.ctags.goto_tag
 --keys[GUI and 'a,' or 'm,'] = m_search['_Ctags']['Jump Back']
 --keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
