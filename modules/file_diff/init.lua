@@ -5,6 +5,12 @@ local M = {}
 --[[ This comment is for LuaDoc.
 ---
 -- File diff'ing for Textadept.
+-- @field theme (string)
+--   The theme to use, either 'dark' or 'light'.
+--   This is not the theme you use with Textadept.
+--   Depending on this setting, additions will be colored 'dark_green' or
+--   'light_green', deletions will be colored 'dark_red' or 'light_red', and so
+--   on.
 -- @field MARK_ADDITION (number)
 --   The marker for line additions.
 -- @field MARK_DELETION (number)
@@ -16,6 +22,8 @@ local M = {}
 -- @field INDIC_ADDITION (number)
 --   The indicator number for text deleted within lines.
 module('_M.file_diff')]]
+
+M.theme = 'dark' -- or light
 
 M.MARK_ADDITION = _SCINTILLA.next_marker_number()
 M.MARK_DELETION = _SCINTILLA.next_marker_number()
@@ -425,14 +433,16 @@ end)
 
 events.connect(events.VIEW_NEW, function()
   local markers = {
-    [MARK_ADDITION] = 'green', [MARK_DELETION] = 'red',
-    [MARK_MODIFICATION] = 'yellow'
+    [MARK_ADDITION] = M.theme..'_green', [MARK_DELETION] = M.theme..'_red',
+    [MARK_MODIFICATION] = M.theme..'_yellow'
   }
   for mark, color in pairs(markers) do
     buffer:marker_define(mark, buffer.MARK_BACKGROUND)
     buffer.marker_back[mark] = buffer.property_int['color.'..color]
   end
-  local indicators = {[INDIC_ADDITION] = 'green', [INDIC_DELETION] = 'red'}
+  local indicators = {
+    [INDIC_ADDITION] = M.theme..'_green', [INDIC_DELETION] = M.theme..'_red'
+  }
   for indic, color in pairs(indicators) do
     buffer.indic_style[indic] = buffer.INDIC_FULLBOX
     buffer.indic_fore[indic] = buffer.property_int['color.'..color]
