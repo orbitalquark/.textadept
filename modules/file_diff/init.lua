@@ -53,6 +53,7 @@ if _L['_Compare Files']:find('^No Localization') then
   _L['_Previous Change'] = '_Previous Change'
   _L['Merge _Left'] = 'Merge _Left'
   _L['Merge _Right'] = 'Merge _Right'
+  _L['_Stop Comparing'] = '_Stop Comparing'
 end
 
 local lib = 'file_diff.diff'
@@ -242,6 +243,7 @@ local function stop()
   clear_marked_changes()
   view1, view2 = nil, nil
 end
+
 -- Stop diff'ing when one of the buffer's being diff'ed is switched or closed.
 events.connect(events.BUFFER_BEFORE_SWITCH,
                function() if not starting_diff then stop() end end)
@@ -475,6 +477,8 @@ for i = 1, #m_tools - 1 do
         {''},
         {_L['Merge _Left'], function() M.merge(true) end},
         {_L['Merge _Right'], M.merge},
+        {''},
+        {_L['_Stop Comparing'], stop}
       })
       break
     end
