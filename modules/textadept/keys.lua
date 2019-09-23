@@ -360,55 +360,25 @@ end)
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
 
 -- Modes.
-keys.filter_through = {
-  ['\n'] = function()
-    return ui.command_entry.finish_mode(textadept.editing.filter_through)
-  end,
-}
-keys.find_incremental = {
-  [GUI and 'an' or 'mn'] = function()
-    ui.find.find_entry_text = ui.command_entry:get_text() -- save
-    ui.find.find_incremental(ui.command_entry:get_text(), true, true)
-  end,
-  [GUI and 'ap' or 'mp'] = function()
-    ui.find.find_incremental(ui.command_entry:get_text(), false, true)
-  end,
-  ['\b'] = function()
-    local e = ui.command_entry:position_before(ui.command_entry.length)
-    ui.find.find_incremental(ui.command_entry:text_range(0, e), true)
-    return false -- propagate
-  end,
-  [GUI and 'am' or 'mm'] = function()
-    ui.find.match_case = not ui.find.match_case
-    ui.statusbar_text = 'Match case '..(ui.find.match_case and 'on' or 'off')
-    ui.find.find_incremental(ui.command_entry:get_text(), true)
-  end,
-  ['\n'] = function() ui.command_entry.finish_mode() end
-}
--- Add the character for any key pressed without modifiers to incremental find.
-setmetatable(keys.find_incremental, {__index = function(_, k)
-               if #k > 1 and k:find('^[cams]*.+$') then return end
-               ui.find.find_incremental(ui.command_entry:get_text()..k, true)
-             end})
--- Show documentation for symbols in the Lua command entry.
-keys.lua_command['a?'] = function()
-  -- Temporarily change _G.buffer since ui.command_entry is the "active" buffer.
-  local orig_buffer = _G.buffer
-  _G.buffer = ui.command_entry
-  textadept.editing.show_documentation()
-  _G.buffer = orig_buffer
+ui.find.find_incremental_keys[GUI and 'an' or 'mn'] = function()
+  ui.find.find_entry_text = ui.command_entry:get_text() -- save
+  ui.find.find_incremental(ui.command_entry:get_text(), true, true)
 end
+ui.find.find_incremental_keys[GUI and 'ap' or 'mp'] = function()
+  ui.find.find_incremental(ui.command_entry:get_text(), false, true)
+end
+ui.find.find_incremental_keys[GUI and 'am' or 'mm'] = function()
+  ui.find.match_case = not ui.find.match_case
+  ui.statusbar_text = 'Match case '..(ui.find.match_case and 'on' or 'off')
+  ui.find.find_incremental(ui.command_entry:get_text(), true)
+end
+ui.find.find_incremental_keys['\n'] = nil -- close on Enter
 if OSX or CURSES then
   -- UTF-8 input.
-  keys.utf8_input = {
-    ['\n'] = function()
-      return ui.command_entry.finish_mode(function(code)
-        buffer:add_text(utf8.char(tonumber(code, 16)))
-      end)
-    end
-  }
   -- TODO: function()
-  --   ui.command_entry.enter_mode('utf8_input')
+  --   ui.command_entry.run(function(code)
+  --     buffer:add_text(utf8.char(tonumber(code, 16)))
+  --   end)
   -- end
 end
 

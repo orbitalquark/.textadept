@@ -1,18 +1,9 @@
 -- Copyright 2019 Mitchell mitchell.att.foicica.com.
 
--- Key mode for using the command entry to open files relative to the current
+-- Module for using the command entry to open files relative to the current
 -- file. Tab-completion is available.
-keys.open_file = {
-  ['\n'] = function()
-    return ui.command_entry.finish_mode(function(file)
-      if file ~= '' and not file:find('^%a?:?[/\\]') then
-        -- Convert relative path into an absolute one.
-        file = (buffer.filename or
-                lfs.currentdir()..'/'):match('^.+[/\\]')..file
-      end
-      io.open_file(file ~= '' and file)
-    end)
-  end,
+
+local mode_keys = {
   ['\t'] = function()
     if ui.command_entry:auto_c_active() then
       ui.command_entry:line_down()
@@ -43,4 +34,12 @@ keys.open_file = {
   end
 }
 
-return function() ui.command_entry.enter_mode('open_file') end
+return function()
+  ui.command_entry.run(function(file)
+    if file ~= '' and not file:find('^%a?:?[/\\]') then
+      -- Convert relative path into an absolute one.
+      file = (buffer.filename or lfs.currentdir()..'/'):match('^.+[/\\]')..file
+    end
+    io.open_file(file ~= '' and file)
+  end, mode_keys)
+end
