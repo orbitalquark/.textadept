@@ -100,8 +100,45 @@ end
 -- List of jump positions comprising a jump history.
 -- Has a `pos` field that points to the current jump position.
 -- @class table
--- @name jump_list
-local jump_list = {pos = 0}
+-- @name history
+local history = {pos = 0}
+
+-- Store the given position in the jump history if applicable, clearing any
+-- jump history positions beyond the current one.
+-- @param filename String filename of the buffer to store.
+-- @param line Integer line number starting from 0 to store.
+-- @param column Integer column number starting from 0 to store.
+local function append_history(filename, line, column)
+  if pcall(require, 'history') then
+    require('history').append(filename, line, column)
+    return
+  end
+  if history.pos < #history then
+    for i = history.pos + 1, #history do history[i] = nil end
+  end
+  if history.pos == 0 or history[#history][1] ~= filename or
+     history[#history][2] ~= line or history[#history][3] ~= column then
+    history[#history + 1] = {filename, line, column}
+    history.pos = #history
+  end
+end
+
+-- Navigate within the jump history.
+-- @param prev Optional flag indicating whether to go to the previous position
+--   in the jump history or the next one.
+local function goto_history(prev)
+  if pcall(require, 'history') then
+    require('history')[prev and 'back' or 'forward']()
+    return
+  end
+  if prev and history.pos <= 1 then return end
+  if not prev and history.pos == #history then return end
+  history.pos = history.pos + (prev and -1 or 1)
+  local record = history[history.pos]
+  io.open_file(record[1])
+  buffer:goto_pos(buffer:find_column(record[2], record[3]))
+end
+
 ---
 -- Jumps to the source of string *tag* or the source of the word under the
 -- caret.
@@ -121,11 +158,7 @@ function M.goto_tag(tag, prev)
     tag = buffer:text_range(s, e)
   elseif not tag then
     -- Navigate within the jump history.
-    if prev and jump_list.pos <= 1 then return end
-    if not prev and jump_list.pos == #jump_list then return end
-    jump_list.pos = jump_list.pos + (prev and -1 or 1)
-    io.open_file(jump_list[jump_list.pos][1])
-    buffer:goto_pos(jump_list[jump_list.pos][2])
+    goto_history(prev)
     return
   end
   -- Search for potential tags to jump to.
@@ -151,15 +184,9 @@ function M.goto_tag(tag, prev)
   else
     tag = tags[1]
   end
-  -- Store the current position in the jump history if applicable, clearing any
-  -- jump history positions beyond the current one.
-  if jump_list.pos < #jump_list then
-    for i = jump_list.pos + 1, #jump_list do jump_list[i] = nil end
-  end
-  if jump_list.pos == 0 or jump_list[#jump_list][1] ~= buffer.filename or
-     jump_list[#jump_list][2] ~= buffer.current_pos then
-    jump_list[#jump_list + 1] = {buffer.filename, buffer.current_pos}
-  end
+  -- Store the current position in the jump history, if applicable.
+  append_history(buffer.filename, buffer:line_from_position(buffer.current_pos),
+                 buffer.column[buffer.current_pos])
   -- Jump to the tag.
   io.open_file(tag[2])
   if not tonumber(tag[3]) then
@@ -173,8 +200,8 @@ function M.goto_tag(tag, prev)
     textadept.editing.goto_line(tonumber(tag[3]) - 1)
   end
   -- Store the new position in the jump history.
-  jump_list[#jump_list + 1] = {buffer.filename, buffer.current_pos}
-  jump_list.pos = #jump_list
+  append_history(buffer.filename, buffer:line_from_position(buffer.current_pos),
+                 buffer.column[buffer.current_pos])
 end
 
 -- Autocompleter function for ctags.
