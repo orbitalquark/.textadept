@@ -47,6 +47,10 @@ io.quick_open_filters[_USERHOME] = {
   '![/\\]%.hg$', '!spellcheck/hunspell' -- folders
 }
 
+-- Settings for Scintilla LongTerm3 development.
+local scintilla_dir = '/home/mitchell/code/scintilla'
+textadept.run.build_commands[scintilla_dir] = 'make -f check.mak'
+
 -- Hide margins when writing e-mails and commit messages.
 events.connect(events.FILE_OPENED, function(filename)
   if filename and
@@ -89,34 +93,42 @@ table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
   if button == 1 then os.spawn(command, root, ui.print, ui.print) end
 end})
 
+-- History module.
+local history = require('history')
+keys[not CURSES and 'a,' or 'm,'] = history.back
+keys[not CURSES and 'a.' or 'm.'] = history.forward
+
 -- Ctags module.
-_M.ctags = require('ctags')
-_M.ctags[_HOME] = _HOME..'/src/tags'
-_M.ctags[_USERHOME] = _HOME..'/src/tags'
+local ctags = require('ctags')
+ctags[_HOME] = _HOME..'/src/tags'
+ctags[_USERHOME] = _HOME..'/src/tags'
 local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
-keys[not CURSES and 'a.' or 'm.'] = _M.ctags.goto_tag
--- TODO: m_ctags['G_oto Ctag...'][2]
-keys[not CURSES and 'a,' or 'm,'] = m_ctags['Jump _Back'][2]
--- TODO: m_ctags['Jump _Forward'][2]
+keys.f12 = ctags.goto_tag
+keys.sf12 = m_ctags['G_oto Ctag...'][2]
+m_ctags['Jump _Back'][2] = history.back -- show correct shortcut
+m_ctags['Jump _Forward'][2] = history.forward -- show correct shorctut
 -- TODO: m_ctags['_Autocomplete Tag'][2]
 
 -- Spellcheck module.
-_M.spellcheck = require('spellcheck')
---keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
---keys.sf7 = m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
+require('spellcheck')
+keys.f7, keys.sf7 = nil, nil -- clear
+-- TODO: m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
+-- TODO: m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
 
 -- File diff module.
-_M.file_diff = require('file_diff')
---keys.f8 = _M.file_diff.start
---keys.sf8 = m_tools[_L['_Compare Files']][_L['Compare _Buffers']][2]
+local file_diff = require('file_diff')
+file_diff.theme = 'light'
+keys.f8, keys.sf8 = nil, nil
+-- TODO: file_diff.start
+-- TODO: m_tools[_L['_Compare Files']][_L['Compare _Buffers']][2]
 --keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 --keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
 --keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
 
 -- Language Server Protocol.
-_M.lsp = require('lsp')
-local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
+-- local lsp = require('lsp')
+-- local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
 -- TODO: m_lsp[_L['_Start Server...']][2]
 -- TODO: m_lsp[_L['Sto_p Server']][2]
 -- TODO: m_lsp[_L['Goto _Workspace Symbol...']][2]
@@ -128,6 +140,56 @@ local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
 -- TODO: m_lsp[_L['Goto _Type Definition']][2]
 -- TODO: m_lsp[_L['Goto _Implementation']][2]
 -- TODO: m_lsp[_L['Find _References']][2]
+
+-- Debugger module.
+local debugger = require('debugger')
+local m_debug = textadept.menu.menubar[_L['_Debug']]
+keys.f5 = m_debug[_L['Go/_Continue']][2]
+keys.f10 = m_debug[_L['Step _Over']][2]
+keys.f11 = m_debug[_L['Step _Into']][2]
+keys.sf11 = m_debug[_L['Step Ou_t']][2]
+-- TODO: m_debug[_L['Pause/_Break']][2]
+-- TODO: m_debug[_L['_Restart']][2]
+keys.sf5 = m_debug[_L['_Stop']][2]
+-- TODO: m_debug[_L['I_nspect']][2]
+-- TODO: m_debug[_L['_Variables...']][2]
+-- TODO: m_debug[_L['Call Stac_k...']][2]
+-- TODO: m_debug[_L['_Evaluate']][2]
+keys.f9 = m_debug[_L['_Toggle Breakpoint']][2]
+-- TODO: m_debug[_L['Remo_ve Breakpoint...']][2]
+-- TODO: m_debug[_L['Set _Watch Expression']][2]
+-- TODO: m_debug[_L['Remove Watch E_xpression']][2]
+
+-- Add an extra debug menu entry for debugging Textadept.
+local m_debug = textadept.menu.menubar[_L['_Debug']]
+if m_debug[#m_debug][1] ~= '' then m_debug[#m_debug + 1] = {''} end
+m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
+  local button = ui.dialogs.yesno_msgbox{
+    title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'
+  }
+  if button == -1 then return end
+  require('debugger.ansi_c').logging = true
+  require('debugger.lua')
+  local args = '-n -f'
+  if button == 1 then
+    args = args..[[ -e '_=require("debugger.lua.mobdebug").start()']]
+  end
+  debugger.start('ansi_c', '/home/mitchell/code/textadept/textadept', args)
+  debugger.continue('ansi_c')
+  if button ~= 1 then return end
+  timeout(0.1, function()
+    if debugger.start('lua', '-') then debugger.continue('lua') end
+  end)
+end}
+
+-- Add option for toggling menubar visibility.
+local menubar_visible = false -- will be hidden on init
+local m_view = textadept.menu.menubar[_L['_View']]
+m_view[#m_view + 1] = {''}
+m_view[#m_view + 1] = {'Toggle _Menubar', function()
+  menubar_visible = not menubar_visible
+  textadept.menu.menubar = menubar_visible and textadept.menu.menubar or nil
+end}
 
 events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
 

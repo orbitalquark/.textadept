@@ -113,9 +113,8 @@ keys["a'"] = textadept.bookmarks.toggle
 -- TODO: m_bookmark[_L['_Previous Bookmark']][2]
 keys['a"'] = textadept.bookmarks.goto_mark
 -- Macros.
-keys.f9 = textadept.macros.start_recording
-keys[GUI and 'sf9' or 'f10'] = textadept.macros.stop_recording
-keys[GUI and 'af9' or 'f12'] = textadept.macros.play
+keys.f9 = textadept.macros.record
+keys[GUI and 'sf9' or 'f10'] = textadept.macros.play
 -- Quick Open.
 local m_quickopen = m_tools[_L['Quick _Open']]
 keys[GUI and 'aU' or 'mU'] = m_quickopen[_L['Quickly Open _User Home']][2]
@@ -169,7 +168,7 @@ local m_indentation = m_buffer[_L['_Indentation']]
 -- TODO: m_buffer[_L['Toggle _Wrap Mode']][2]
 -- TODO: m_buffer[_L['Toggle View White_space']][2]
 -- TODO: textadept.file_types.select_lexer
-keys.f5 = m_buffer[_L['_Refresh Syntax Highlighting']][2]
+-- TODO: m_buffer[_L['_Refresh Syntax Highlighting']][2]
 
 -- Views.
 local m_view = textadept.menu.menubar[_L['_View']]
@@ -280,7 +279,7 @@ keys.cl = buffer.vertical_centre_caret
 -- TODO: buffer.line_scroll_up
 -- TODO: buffer.scroll_to_start
 -- TODO: buffer.scroll_to_end
-keys['c '] = function() buffer.selection_mode = 0 end
+keys['c '] = function() buffer.selection_mode = buffer.SEL_STREAM end
 keys['c]'] = buffer.swap_main_anchor_caret
 
 -- Miscellaneous not in standard menu.
@@ -324,7 +323,6 @@ keys[GUI and 'ao' or 'mo'] = function()
 end
 keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
 keys[GUI and 'a>' or 'm>'] = function() buffer:line_scroll(20, 0) end
-keys.f10 = function() ui.maximized = not ui.maximized end
 keys.cal = function()
   if #_VIEWS == 1 then return end
   view.size = ui.size[ui.get_split_table().vertical and 1 or 2] / 2
@@ -342,24 +340,23 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
   if not keys[lang][GUI and 'a?' or 'm?'] then
     keys[lang][GUI and 'a?' or 'm?'] = function()
-      _M.lsp.signature_help()
-      if not buffer:call_tip_active() then _M.lsp.hover() end
+      local lsp = require('lsp')
+      lsp.signature_help()
+      if not buffer:call_tip_active() then lsp.hover() end
       return buffer:call_tip_active()
     end
   end
 end)
 
---keys[GUI and 'a.' or 'm,'] = _M.ctags.goto_tag
---keys[GUI and 'a,' or 'm,'] = m_search['_Ctags']['Jump Back']
---keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
---keys.sf7 = m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
---keys.f8 = _M.file_diff.start
+--keys[GUI and 'a,' or 'm,'] = history.back
+--keys[GUI and 'a.' or 'm.'] = history.forward
+--keys.f12 = ctags.goto_tag
 --keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 --keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
 --keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
 
--- Modes.
+-- Other.
 ui.find.find_incremental_keys[GUI and 'an' or 'mn'] = function()
   ui.find.find_entry_text = ui.command_entry:get_text() -- save
   ui.find.find_incremental(ui.command_entry:get_text(), true, true)
@@ -373,14 +370,14 @@ ui.find.find_incremental_keys[GUI and 'am' or 'mm'] = function()
   ui.find.find_incremental(ui.command_entry:get_text(), true)
 end
 ui.find.find_incremental_keys['\n'] = nil -- close on Enter
-if OSX or CURSES then
+-- if OSX or CURSES then
   -- UTF-8 input.
   -- TODO: function()
   --   ui.command_entry.run(function(code)
   --     buffer:add_text(utf8.char(tonumber(code, 16)))
   --   end)
   -- end
-end
+-- end
 
 -- Keys for the command entry.
 local ekeys = ui.command_entry.editing_keys.__index
