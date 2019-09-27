@@ -40,7 +40,9 @@ local function record_edit_location(modification_type, position, length)
   if modification_type & buffer.MOD_INSERTTEXT > 0 then
     if length == buffer.length then return end -- ignore file loading
     position = position + length
-  elseif modification_type & buffer.MOD_DELETETEXT == 0 then
+  elseif modification_type & buffer.MOD_DELETETEXT > 0 then
+    if buffer.length == 0 then return end -- ignore replacing buffer contents
+  else
     return
   end
   -- Ignore undo/redo.
