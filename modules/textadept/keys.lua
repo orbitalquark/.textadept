@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuv  yz~\]^_
--- a:  aA  cC  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\ ;       / \b~
+-- a:  aA   C  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\         / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -96,7 +96,7 @@ keys.cg = textadept.editing.goto_line
 
 -- Tools.
 local m_tools = textadept.menu.menubar[_L['_Tools']]
-keys[GUI and 'a:' or 'm:'] = m_tools[_L['Command _Entry']][2]
+keys[GUI and 'ac' or 'mc'] = m_tools[_L['Command _Entry']][2]
 keys.cc = m_tools[_L['Select Co_mmand']][2]
 -- TODO: textadept.run.run
 -- TODO: textadept.run.compile
@@ -113,8 +113,8 @@ keys["a'"] = textadept.bookmarks.toggle
 -- TODO: m_bookmark[_L['_Previous Bookmark']][2]
 keys['a"'] = textadept.bookmarks.goto_mark
 -- Macros.
-keys.f9 = textadept.macros.record
-keys[GUI and 'sf9' or 'f10'] = textadept.macros.play
+keys[GUI and 'a:' or 'm:'] = textadept.macros.record
+keys[GUI and 'a;' or 'm;'] = textadept.macros.play
 -- Quick Open.
 local m_quickopen = m_tools[_L['Quick _Open']]
 keys[GUI and 'aU' or 'mU'] = m_quickopen[_L['Quickly Open _User Home']][2]
