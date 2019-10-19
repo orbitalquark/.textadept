@@ -127,7 +127,7 @@ keys.f8, keys.sf8 = nil, nil
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
 
 -- Language Server Protocol.
--- local lsp = require('lsp')
+local lsp = require('lsp')
 -- local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
 -- TODO: m_lsp[_L['_Start Server...']][2]
 -- TODO: m_lsp[_L['Sto_p Server']][2]
