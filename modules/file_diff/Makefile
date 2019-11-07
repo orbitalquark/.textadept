@@ -52,6 +52,4 @@ deps: diff_match_patch.h
 diff_match_patch_zip = 7f95b37e554453262e2bcda830724fc362614103.zip
 $(diff_match_patch_zip):
 	wget https://github.com/leutloff/diff-match-patch-cpp-stl/archive/$@
-diff_match_patch.h: | $(diff_match_patch_zip)
-	mkdir $(basename $@) && unzip -d $(basename $@) $|
-	mv $(basename $@)/*/$@ $@
+diff_match_patch.h: | $(diff_match_patch_zip) ; unzip -j $| "*/$@"
