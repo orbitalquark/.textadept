@@ -351,10 +351,17 @@ end)
 --keys[GUI and 'a,' or 'm,'] = history.back
 --keys[GUI and 'a.' or 'm.'] = history.forward
 --keys.f12 = ctags.goto_tag
+--keys.sf12 = m_ctags['G_oto Ctag...'][2]
 --keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 --keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
 --keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
+--keys.f5 = m_debug[_L['Go/_Continue']][2]
+--keys.f10 = m_debug[_L['Step _Over']][2]
+--keys.f11 = m_debug[_L['Step _Into']][2]
+--keys.sf11 = m_debug[_L['Step Ou_t']][2]
+--keys.sf5 = m_debug[_L['_Stop']][2]
+--keys.f9 = m_debug[_L['_Toggle Breakpoint']][2]
 
 -- Other.
 ui.find.find_incremental_keys[GUI and 'an' or 'mn'] = function()
