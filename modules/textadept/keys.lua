@@ -251,6 +251,7 @@ keys[GUI and 'ap' or 'mp'] = buffer.para_up
 -- TODO: buffer.document_end
 -- TODO: buffer.document_end_extend
 keys.ch = buffer.delete_back
+if WIN32 and CURSES then keys['c\b'] = buffer.delete_back end -- ch becomes c\b
 -- TODO: buffer.delete_back_not_line
 keys[GUI and 'ah' or 'mh'] = buffer.del_word_left
 keys.cd = buffer.clear

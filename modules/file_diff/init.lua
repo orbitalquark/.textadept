@@ -59,7 +59,7 @@ end
 local lib = 'file_diff.diff'
 if OSX then
   lib = lib..'osx'
-else
+elseif not WIN32 then
   local p = io.popen('uname -i')
   if p:read('*a'):find('64') then lib = lib..'64' end
   p:close()

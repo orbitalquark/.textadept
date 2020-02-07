@@ -110,10 +110,12 @@ m_ctags['Jump _Forward'][2] = history.forward -- show correct shorctut
 -- TODO: m_ctags['_Autocomplete Tag'][2]
 
 -- Spellcheck module.
-require('spellcheck')
-keys.f7, keys.sf7 = nil, nil -- clear
--- TODO: m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
--- TODO: m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
+if not (WIN32 and CURSES) then
+  require('spellcheck')
+  keys.f7, keys.sf7 = nil, nil -- clear
+  -- TODO: m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
+  -- TODO: m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
+end
 
 -- File diff module.
 local file_diff = require('file_diff')
