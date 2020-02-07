@@ -335,6 +335,7 @@ end
 function M.toggle_breakpoint(file, line)
   local lexer = buffer:get_lexer()
   if not file then file = buffer.filename end
+  if not file then return end -- nothing to do
   if not line then line = buffer:line_from_position(buffer.current_pos) + 1 end
   if not breakpoints[lexer] or not breakpoints[lexer][file] or
      not breakpoints[lexer][file][line] then
