@@ -20,13 +20,13 @@ local mode_keys = {
     local dir, part = path:match('^(.-)\\?([^/\\]*)$')
     if lfs.attributes(dir, 'mode') == 'directory' then
       -- Iterate over directory, finding file matches.
-      part = '^'..part:gsub('(%p)', '%%%1')
+      local patt = '^'..part:gsub('(%p)', '%%%1')
       lfs.dir_foreach(dir, function(file)
         file = file:match('[^/\\]+[/\\]?$')
-        if file:find(part) then files[#files + 1] = file end
+        if file:find(patt) then files[#files + 1] = file end
       end, nil, 0, true)
       table.sort(files)
-      ui.command_entry:auto_c_show(#part - 1, table.concat(files, ' '))
+      ui.command_entry:auto_c_show(#part, table.concat(files, ' '))
     end
   end,
   ['s\t'] = function()
