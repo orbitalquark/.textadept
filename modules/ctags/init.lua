@@ -26,12 +26,57 @@
 --   Autocompleter function for ctags. (Names only; not context-sensitive).
 -- @field ctags (string)
 --   Path to the ctags executable.
---   The default value is `ctags`.
+--   The default value is `'ctags'`.
+-- @field generate_default_api (bool)
+--   Whether or not to generate simple api documentation files based on *tags*
+--   file contents. For example, functions are documented with their signatures
+--   and source file paths.
+--   This *api* file is generated in the same directory as *tags* and can be
+--   read by [`textadept.editing.show_documentation`]() as long as it was added
+--   to [`textadept.editing.api_files`]() for a given language.
+--   The default value is `true`.
+-- @field LUA_FLAGS (string)
+--   A set of command-line options for ctags that better parses Lua code.
+--   Combine this with other flags in `ctags_flags` if Lua files will be parsed.
+-- @field LUA_GENERATOR (string)
+--   Placeholder value that indicates Textadept's built-in Lua tags and api file
+--   generator should be used instead of ctags. Requires LuaDoc to be installed.
 module('_M.ctags')]]
 
 local M = {}
 
 M.ctags = 'ctags'
+M.generate_default_api = true
+
+---
+-- Map of project root paths to string command-line options, or functions that
+-- return such strings, that are passed to ctags when generating project tags.
+-- @class table
+-- @name ctags_flags
+-- @see LUA_FLAGS
+M.ctags_flags = {}
+
+---
+-- Map of project root paths to string commands, or functions that return such
+-- strings, that generate an *api* file that Textadept can read via
+-- `textadept.editing.show_documentation()`.
+-- The user is responsible for adding the generated api file to
+-- `textadept.editing.api_files[lexer]` for each lexer language the file applies
+-- to.
+-- @class table
+-- @name api_commands
+-- @see textadept.editing.api_files
+M.api_commands = {}
+
+M.LUA_FLAGS = table.concat({
+  '--langdef=luax',
+  '--langmap=luax:.lua',
+  [[--regex-luax="/^\s*function\s+[^[:space:]\.]*\.?([[:alnum:]_]+)\(/\1/f/"]],
+  [[--regex-luax="/^\s*local\s+function\s+([[:alnum:]_]+)\(/\1/F/"]],
+  [[--regex-luax="/^[^[:space:]\.]*\.?([[:alnum:]_]+)\s*=\s*[{]/\1/t/"]]
+})
+
+M.LUA_GENERATOR = 'LUA_GENERATOR'
 
 -- Searches all available tags files tag *tag* and returns a table of tags
 -- found.
@@ -45,23 +90,27 @@ local function find_tags(tag)
   local patt = '^('..tag..'%S*)\t([^\t]+)\t(.-);"\t?(.*)$'
   -- Determine the tag files to search in.
   local tag_files = {}
+  local function add_tag_file(file)
+    for i = 1, #tag_files do if tag_files[i] == file then return end end
+    tag_files[#tag_files + 1] = file
+  end
   local tag_file = ((buffer.filename or ''):match('^.+[/\\]') or
                     lfs.currentdir()..'/')..'tags' -- current directory's tags
-  if lfs.attributes(tag_file) then tag_files[#tag_files + 1] = tag_file end
+  if lfs.attributes(tag_file) then add_tag_file(tag_file) end
   if buffer.filename then
     local root = io.get_project_root(buffer.filename)
     if root then
       tag_file = root..'/tags' -- project's tags
-      if lfs.attributes(tag_file) then tag_files[#tag_files + 1] = tag_file end
+      if lfs.attributes(tag_file) then add_tag_file(tag_file) end
       tag_file = M[root] -- project's specified tags
       if type(tag_file) == 'string' then
-        tag_files[#tag_files + 1] = tag_file
+        add_tag_file(tag_file)
       elseif type(tag_file) == 'table' then
-        for i = 1, #tag_file do tag_files[#tag_files + 1] = tag_file[i] end
+        for i = 1, #tag_file do add_tag_file(tag_file[i]) end
       end
     end
   end
-  for i = 1, #M do tag_files[#tag_files + 1] = M[i] end -- global tags
+  for i = 1, #M do add_tag_file(M[i]) end -- global tags
   -- Search all tags files for matches.
   local tmpfile
   ::retry::
@@ -229,7 +278,43 @@ m_search[#m_search + 1] = {
   {'Jump _Back', function() M.goto_tag(nil, true) end},
   {'Jump _Forward', function() M.goto_tag(nil, false) end},
   {''},
-  {'_Autocomplete Tag', function() textadept.editing.autocomplete('ctag') end}
+  {'_Autocomplete Tag', function() textadept.editing.autocomplete('ctag') end},
+  {''},
+  {'Generate _Project Tags and API', function()
+    local root_directory = io.get_project_root()
+    if not root_directory then return end
+    local ctags_flags = M.ctags_flags[root_directory]
+    if type(ctags_flags) == 'function' then ctags_flags = ctags_flags() end
+    local api_command = M.api_commands[root_directory]
+    if type(api_command) == 'function' then api_command = api_command() end
+    if ctags_flags == M.LUA_GENERATOR or api_command == M.LUA_GENERATOR then
+      os.spawn('luadoc -d . --doclet tadoc .', root_directory,
+               {'LUA_PATH='.._HOME..'/modules/lua/?.lua;;'}):wait()
+    end
+    if ctags_flags ~= M.LUA_GENERATOR then
+      os.spawn(string.format('"%s" %s', M.ctags, ctags_flags or '-R'),
+               root_directory):wait()
+    end
+    if api_command then
+      if api_command ~= M.LUA_GENERATOR then
+        os.spawn(api_command, root_directory):wait()
+      end
+    elseif M.generate_default_api then
+      -- Generate from ctags file.
+      local f = assert(io.open(root_directory..'/api', 'wb'))
+      for line in io.lines(root_directory..'/tags') do
+        local patt = '^(%S*)\t([^\t]+)\t(.-);"\t?(.*)$'
+        local tag, file, ex_cmd = line:match(patt)
+        if tag then
+          ex_cmd = ex_cmd:match('^/^?(.-)$?/$')
+          if ex_cmd and tag:find('^[%w_]+$') then
+            f:write(tag, ' ', ex_cmd, '\\n', file, '\n')
+          end
+        end
+      end
+      f:close()
+    end
+  end}
 }
 
 return M

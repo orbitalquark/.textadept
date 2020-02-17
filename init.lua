@@ -108,6 +108,25 @@ keys.sf12 = m_ctags['G_oto Ctag...'][2]
 m_ctags['Jump _Back'][2] = history.back -- show correct shortcut
 m_ctags['Jump _Forward'][2] = history.forward -- show correct shorctut
 -- TODO: m_ctags['_Autocomplete Tag'][2]
+-- TODO: m_ctags['Generate _Project Tags'][2]
+
+-- Settings for Textadept development.
+ctags.ctags_flags[_HOME] = table.concat({
+  '-R', ctags.LUA_FLAGS,
+  '--exclude="*doc*"', '--exclude=src/scintilla/cocoa',
+  '--exclude=src/scintilla/lexers', '--exclude=src/scintilla/lua',
+  '--exclude=src/scintilla/qt', '--exclude=src/scintilla/scripts',
+  '--exclude=src/scintilla/test', '--exclude=src/scintilla/win32',
+  'core', 'modules/ansi_c', 'modules/lua', 'modules/textadept',
+  'src/textadept.c', 'init.lua', 'src/scintilla', 'src/gtdialog/gtdialog.c'
+}, ' ')
+ctags.api_commands[_HOME] = function()
+  os.spawn('make -C '.._HOME..'/src luadoc'):wait()
+  return nil -- keep default behavior
+end
+local api_files = textadept.editing.api_files
+api_files.ansi_c[#api_files.ansi_c + 1] = _HOME..'/api'
+api_files.cpp[#api_files.cpp + 1] = _HOME..'/api'
 
 -- Spellcheck module.
 if not (WIN32 and CURSES) then
