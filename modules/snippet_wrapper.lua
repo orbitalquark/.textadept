@@ -15,8 +15,10 @@ local function get_api_snippet(symbol, lang)
     local symbol_patt = '^'..symbol:match('[%w_-]+$'):gsub('(%p)', '%%%1')
     local signature_patt = '%f[%w_-]'..symbol:gsub('(%p)', '%%%1')..'(%b())'
     for i = 1, #api_files do
-      if lfs.attributes(api_files[i]) then
-        for line in io.lines(api_files[i]) do
+      local api_file = api_files[i]
+      if type(api_file) == 'function' then api_file = api_file() end
+      if api_file and lfs.attributes(api_file) then
+        for line in io.lines(api_file) do
           if line:find(symbol_patt) then
             apis[#apis + 1] = line:match(signature_patt)
             if lang == 'lua' and not line:match(signature_patt) then
