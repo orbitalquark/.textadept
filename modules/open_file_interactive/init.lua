@@ -1,4 +1,4 @@
--- Copyright 2019 Mitchell mitchell.att.foicica.com.
+-- Copyright 2019-2020 Mitchell mitchell.att.foicica.com.
 
 -- Module for using the command entry to open files relative to the current
 -- file. Tab-completion is available.
