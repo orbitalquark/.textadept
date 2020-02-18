@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuv  yz~\]^_
--- a:  aA   C  eE      iIjJkKlL   N O PqQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\         / \b~
+-- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\         / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -320,6 +320,24 @@ keys[GUI and 'ao' or 'mo'] = function()
     buffer:home()
     buffer:new_line()
     buffer:line_up()
+  end
+end
+local next_key, prev_key = GUI and 'aN' or 'mN', GUI and 'aP' or 'mP'
+for key, v in pairs{[next_key] = true, [prev_key] = false} do
+  keys[key] = function()
+    local orig_view = view
+    for i = 1, #_VIEWS do
+      local buffer_type = _VIEWS[i].buffer._type
+      if buffer_type == _L['[Files Found Buffer]'] then
+        ui.find.goto_file_found(false, v)
+        if view == _VIEWS[i] then ui.goto_view(orig_view) end -- nothing found
+        return
+      elseif buffer_type == _L['[Message Buffer]'] then
+        textadept.run.goto_error(false, v)
+        if view == _VIEWS[i] then ui.goto_view(orig_view) end -- nothing found
+        return
+      end
+    end
   end
 end
 keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
