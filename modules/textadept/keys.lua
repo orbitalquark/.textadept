@@ -122,7 +122,7 @@ keys[GUI and 'aH' or 'mH'] = m_quickopen[_L['Quickly Open _Textadept Home']][2]
 keys[GUI and 'ar' or 'mr'] = io.quick_open
 -- Snippets.
 keys['\t'] = function()
-  if buffer:auto_c_active() then buffer:line_down() return end -- scroll
+  if buffer:auto_c_active() then return end -- ignore
   if textadept.snippets._insert() ~= false then return true end
   if buffer.selection_empty then
     if textadept.editing.autocomplete('word') == true then return true end
@@ -137,6 +137,7 @@ keys['s\t'] = function()
 end
 keys.esc = textadept.snippets._cancel_current
 -- TODO: textadept.snippets._select
+-- TODO: m_snippets[_L['Complete Trigger _Word']][2]
 -- Other.
 -- m_tools[_L['_Complete Symbol']][2] is '\t'
 keys[GUI and 'a?' or 'm?'] = textadept.editing.show_documentation
@@ -352,8 +353,10 @@ events.connect(events.LEXER_LOADED, function(lang)
   if not keys[lang] then return end
   if not keys[lang]['\t'] then
     keys[lang]['\t'] = function()
+      if buffer:auto_c_active() then return end -- ignore
       return buffer.selection_empty and
-             (textadept.editing.autocomplete(lang) == true or
+             (textadept.snippets._insert() == nil or
+              textadept.editing.autocomplete(lang) == true or
               textadept.editing.autocomplete('lsp') == true)
     end
   end
