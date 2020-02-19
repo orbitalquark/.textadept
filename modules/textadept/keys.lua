@@ -13,7 +13,7 @@ local keys, GUI = keys, not CURSES
 
 -- File.
 -- TODO: buffer.new
-keys.cr = require('open_file_interactive')
+keys.cr = require('open_file_mode')
 -- TODO: io.open_recent_file
 -- TODO: io.reload_file
 keys.cw = io.save_file
