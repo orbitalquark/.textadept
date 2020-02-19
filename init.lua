@@ -27,11 +27,15 @@ io.quick_open_filters[_HOME] = {
   '!gtdialog/cdk',
   '!images',
   '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
+  '!modules/file_diff/diff_match_patch', '!modules/file_diff/test',
+  '!modules/spellcheck/hunspell',
   '!modules/yaml/src',
   '!releases',
   '!scintilla/cocoa', '!scintilla/doc', '!scintilla/lexers', '!scintilla/lua',
   '!scintilla/qt', '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
   '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
+  -- Files to exclude.
+  '!api$', '![^c]tags$'
 }
 ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
 textadept.run.build_commands[_HOME] = function()
@@ -94,21 +98,12 @@ table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
 end})
 
 -- History module.
-local history = require('history')
-keys[not CURSES and 'a,' or 'm,'] = history.back
-keys[not CURSES and 'a.' or 'm.'] = history.forward
+require('history')
 
 -- Ctags module.
 local ctags = require('ctags')
 ctags[_HOME] = _HOME..'/src/tags'
 ctags[_USERHOME] = _HOME..'/src/tags'
-local m_ctags = textadept.menu.menubar[_L['_Search']]['_Ctags']
-keys.f12 = ctags.goto_tag
-keys.sf12 = m_ctags['G_oto Ctag...'][2]
-m_ctags['Jump _Back'][2] = history.back -- show correct shortcut
-m_ctags['Jump _Forward'][2] = history.forward -- show correct shorctut
--- TODO: m_ctags['_Autocomplete Tag'][2]
--- TODO: m_ctags['Generate _Project Tags'][2]
 
 -- Settings for Textadept development.
 ctags.ctags_flags[_HOME] = table.concat({
@@ -129,58 +124,16 @@ api_files.ansi_c[#api_files.ansi_c + 1] = _HOME..'/api'
 api_files.cpp[#api_files.cpp + 1] = _HOME..'/api'
 
 -- Spellcheck module.
-if not (WIN32 and CURSES) then
-  require('spellcheck')
-  keys.f7, keys.sf7 = nil, nil -- clear
-  -- TODO: m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
-  -- TODO: m_tools[_L['Spe_lling']][_L['_Mark Misspelled Words']][2]
-end
+require('spellcheck')
 
 -- File diff module.
-local file_diff = require('file_diff')
-file_diff.theme = 'light'
-keys.f8, keys.sf8 = nil, nil
--- TODO: file_diff.start
--- TODO: m_tools[_L['_Compare Files']][_L['Compare _Buffers']][2]
---keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
---keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
---keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
---keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
+require('file_diff')
 
 -- Language Server Protocol.
-local lsp = require('lsp')
--- local m_lsp = textadept.menu.menubar[_L['_Tools']][_L['_Language Server']]
--- TODO: m_lsp[_L['_Start Server...']][2]
--- TODO: m_lsp[_L['Sto_p Server']][2]
--- TODO: m_lsp[_L['Goto _Workspace Symbol...']][2]
--- TODO: m_lsp[_L['Goto _Document Symbol...']][2]
--- TODO: m_lsp[_L['_Autocomplete']][2]
--- TODO: m_lsp[_L['Show _Hover Information']][2]
--- TODO: m_lsp[_L['Show Si_gnature Help']][2]
--- TODO: m_lsp[_L['Goto _Definition']][2]
--- TODO: m_lsp[_L['Goto _Type Definition']][2]
--- TODO: m_lsp[_L['Goto _Implementation']][2]
--- TODO: m_lsp[_L['Find _References']][2]
+require('lsp')
 
 -- Debugger module.
 local debugger = require('debugger')
-local m_debug = textadept.menu.menubar[_L['_Debug']]
-keys.f5 = m_debug[_L['Go/_Continue']][2]
-keys.f10 = m_debug[_L['Step _Over']][2]
-keys.f11 = m_debug[_L['Step _Into']][2]
-keys.sf11 = m_debug[_L['Step Ou_t']][2]
--- TODO: m_debug[_L['Pause/_Break']][2]
--- TODO: m_debug[_L['_Restart']][2]
-keys.sf5 = m_debug[_L['_Stop']][2]
--- TODO: m_debug[_L['I_nspect']][2]
--- TODO: m_debug[_L['_Variables...']][2]
--- TODO: m_debug[_L['Call Stac_k...']][2]
--- TODO: m_debug[_L['_Evaluate']][2]
-keys.f9 = m_debug[_L['_Toggle Breakpoint']][2]
--- TODO: m_debug[_L['Remo_ve Breakpoint...']][2]
--- TODO: m_debug[_L['Set _Watch Expression']][2]
--- TODO: m_debug[_L['Remove Watch E_xpression']][2]
-
 -- Add an extra debug menu entry for debugging Textadept.
 local m_debug = textadept.menu.menubar[_L['_Debug']]
 if m_debug[#m_debug][1] ~= '' then m_debug[#m_debug + 1] = {''} end
@@ -404,6 +357,7 @@ events.connect(events.LEXER_LOADED, function(lexer)
   snippets.uice = 'ui.command_entry'
   snippets.uid = 'ui.dialogs'
   snippets.uif = 'ui.find'
+  snippets.L = "_L['%1']"
   -- Scintilla.
   snippets.banc = 'buffer.anchor'
   snippets.bca = 'buffer.char_at[%1(pos)]'
@@ -478,4 +432,4 @@ events.connect(events.LEXER_LOADED, function(lexer)
   _M.lua.expr_types['^love%.thread%.newChannel%('] = 'Channel'
 end)
 -- Lua REPL.
-require('lua.repl')
+require('lua_repl')

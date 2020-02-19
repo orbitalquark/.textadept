@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuv  yz~\]^_
--- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_`~~~~~%^&*()-=+[]{}\         / \b~
+-- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_`~~~~~%^&*()-  []{}\         / \b~
 
 local keys, GUI = keys, not CURSES
 
@@ -370,20 +370,26 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
 end)
 
---keys[GUI and 'a,' or 'm,'] = history.back
---keys[GUI and 'a.' or 'm.'] = history.forward
+--keys[not OSX and GUI and 'a,' or 'm,'] = history.back
+--keys[not OSX and GUI and 'a.' or 'm.'] = history.forward
 --keys.f12 = ctags.goto_tag
 --keys.sf12 = m_ctags['G_oto Ctag...'][2]
+--keys.f6 = file_diff.start
+--keys.sf6 = m_tools[_L['_Compare Files']][_L['Compare _Buffers']][2]
 --keys.adown = m_tools[_L['_Compare Files']][_L['_Next Change']][2]
 --keys.aup = m_tools[_L['_Compare Files']][_L['_Previous Change']][2]
 --keys.aleft = m_tools[_L['_Compare Files']][_L['Merge _Left']][2]
 --keys.aright = m_tools[_L['_Compare Files']][_L['Merge _Right']][2]
---keys.f5 = m_debug[_L['Go/_Continue']][2]
---keys.f10 = m_debug[_L['Step _Over']][2]
---keys.f11 = m_debug[_L['Step _Into']][2]
---keys.sf11 = m_debug[_L['Step Ou_t']][2]
---keys.sf5 = m_debug[_L['_Stop']][2]
---keys.f9 = m_debug[_L['_Toggle Breakpoint']][2]
+--keys.f7 = m_tools[_L['Spe_lling']][_L['_Check Spelling...']][2]
+--keys.sf7 = spellcheck.check_spelling
+--keys.f5 = debugger.start
+--keys.f10 = debugger.step_over
+--keys.f11 = debugger.step_into
+--keys.sf11 = debugger.step_out
+--keys.sf5 = debugger.stop
+--keys[not CURSES and 'a=' or 'm='] = M.inspect
+--keys[not CURSES and 'a+' or 'm+'] = m_debug[_L['_Evaluate...']][2]
+--keys.f9 = debugger.toggle_breakpoint
 
 -- Other.
 ui.find.find_incremental_keys[GUI and 'an' or 'mn'] = function()
@@ -418,6 +424,8 @@ ekeys.cn = function() ui.command_entry:line_down() end
 ekeys.cp = function() ui.command_entry:line_up() end
 ekeys.ca = function() ui.command_entry:vc_home() end
 ekeys.ce = function() ui.command_entry:line_end() end
+ekeys.cv = function() ui.command_entry:page_down() end
+ekeys[GUI and 'av' or 'mv'] = function() ui.command_entry:page_up() end
 ekeys.ch = function() ui.command_entry:delete_back() end
 ekeys[GUI and 'ah' or 'mh'] = function() ui.command_entry:del_word_left() end
 ekeys.cd = function() ui.command_entry:clear() end
