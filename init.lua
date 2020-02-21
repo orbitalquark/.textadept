@@ -31,7 +31,7 @@ io.quick_open_filters[_HOME] = {
   '!modules/spellcheck/hunspell',
   '!modules/yaml/src',
   '!releases',
-  '!scintilla/cocoa', '!scintilla/doc', '!scintilla/lexers', '!scintilla/lua',
+  '!scintilla/cocoa', '!scintilla/doc', '!scintilla/lua',
   '!scintilla/qt', '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
   '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
   -- Files to exclude.
@@ -48,7 +48,7 @@ end
 -- Filter for ~/.textadept.
 io.quick_open_filters[_USERHOME] = {
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', -- extensions
-  '![/\\]%.hg$', '!spellcheck/hunspell' -- folders
+  '!/%.hg$' -- folders
 }
 
 -- Settings for Scintilla LongTerm3 development.
@@ -102,26 +102,27 @@ require('history')
 
 -- Ctags module.
 local ctags = require('ctags')
-ctags[_HOME] = _HOME..'/src/tags'
-ctags[_USERHOME] = _HOME..'/src/tags'
+ctags[_HOME] = _HOME..'/modules/lua/ta_tags'
+ctags[_HOME..'/src/scintilla'] = _HOME..'/tags'
+ctags[_USERHOME] = _HOME..'/modules/lua/ta_tags'
 
 -- Settings for Textadept development.
 ctags.ctags_flags[_HOME] = table.concat({
-  '-R', ctags.LUA_FLAGS,
-  '--exclude="*doc*"', '--exclude=src/scintilla/cocoa',
-  '--exclude=src/scintilla/lexers', '--exclude=src/scintilla/lua',
-  '--exclude=src/scintilla/qt', '--exclude=src/scintilla/scripts',
-  '--exclude=src/scintilla/test', '--exclude=src/scintilla/win32',
-  'core', 'modules/ansi_c', 'modules/lua', 'modules/textadept',
-  'src/textadept.c', 'init.lua', 'src/scintilla', 'src/gtdialog/gtdialog.c'
+  '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c',
+  'src/scintilla/curses', 'src/scintilla/gtk', 'src/scintilla/include',
+  'src/scintilla/lexlib', 'src/scintilla/src',
+  'src/scintilla/lexers/LexLPeg.cxx'
 }, ' ')
 ctags.api_commands[_HOME] = function()
   os.spawn('make -C '.._HOME..'/src luadoc'):wait()
   return nil -- keep default behavior
 end
 local api_files = textadept.editing.api_files
-api_files.ansi_c[#api_files.ansi_c + 1] = _HOME..'/api'
-api_files.cpp[#api_files.cpp + 1] = _HOME..'/api'
+local function ta_api()
+  return (buffer.filename or ''):find(_HOME) and _HOME..'/api' or nil
+end
+api_files.ansi_c[#api_files.ansi_c + 1] = ta_api
+api_files.cpp[#api_files.cpp + 1] = ta_api
 
 -- Spellcheck module.
 require('spellcheck')
