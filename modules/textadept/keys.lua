@@ -106,7 +106,7 @@ keys.cc = m_tools[_L['Select Co_mmand']][2]
 -- TODO: m_tools[_L['_Next Error']][2]
 -- TODO: m_tools[_L['_Previous Error']][2]
 -- Bookmarks.
-local m_bookmark = m_tools[_L['_Bookmark']]
+local m_bookmark = m_tools[_L['_Bookmarks']]
 keys["a'"] = textadept.bookmarks.toggle
 -- TODO: textadept.bookmarks.clear
 -- TODO: m_bookmark[_L['_Next Bookmark']][2]
