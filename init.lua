@@ -66,7 +66,7 @@ events.connect(events.FILE_OPENED, function(filename)
 end)
 
 -- VCS diff of current file.
-local m_file = textadept.menu.menubar[_L['_File']]
+local m_file = textadept.menu.menubar[_L['File']]
 table.insert(m_file, #m_file - 1, {''}) -- before Quit
 table.insert(m_file, #m_file - 1, {'VCS Diff', function()
   local root = io.get_project_root()
@@ -87,7 +87,7 @@ table.insert(m_file, #m_file - 1, {'VCS Diff', function()
 end})
 
 -- Run shell commands at project root.
-local m_tools = textadept.menu.menubar[_L['_Tools']]
+local m_tools = textadept.menu.menubar[_L['Tools']]
 table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
   local root = io.get_project_root()
   if not root then return end
@@ -136,7 +136,7 @@ require('lsp')
 -- Debugger module.
 local debugger = require('debugger')
 -- Add an extra debug menu entry for debugging Textadept.
-local m_debug = textadept.menu.menubar[_L['_Debug']]
+local m_debug = textadept.menu.menubar[_L['Debug']]
 if m_debug[#m_debug][1] ~= '' then m_debug[#m_debug + 1] = {''} end
 m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
   local button = ui.dialogs.yesno_msgbox{
@@ -159,7 +159,7 @@ end}
 
 -- Add option for toggling menubar visibility.
 local menubar_visible = false -- will be hidden on init
-local m_view = textadept.menu.menubar[_L['_View']]
+local m_view = textadept.menu.menubar[_L['View']]
 m_view[#m_view + 1] = {''}
 m_view[#m_view + 1] = {'Toggle _Menubar', function()
   menubar_visible = not menubar_visible
