@@ -330,7 +330,7 @@ keys.co = function()
   buffer:new_line()
 end
 keys[GUI and 'ao' or 'mo'] = function()
-  if buffer:line_from_position(buffer.current_pos) > 0 then
+  if buffer:line_from_position(buffer.current_pos) > 1 then
     buffer:line_up()
     buffer:line_end()
     buffer:new_line()
