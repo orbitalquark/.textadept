@@ -44,7 +44,7 @@ local function get_api_snippet(symbol, lang)
   if lang == 'lua' then
     -- If the function is a 'self' function, strip the first self arg.
     local line, pos = buffer:get_cur_line()
-    if line:sub(1, pos):find(':'..symbol..'$') or symbol:find(':') then
+    if line:sub(1, pos - 1):find(':'..symbol..'$') or symbol:find(':') then
       apis[1] = apis[1]:gsub('[^(,)]+,?%s*', '', 1)
     end
     -- Handle Lua API documentation's optional argument bracket delimiters.

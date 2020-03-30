@@ -127,7 +127,7 @@ keys['\t'] = function()
   if buffer.selection_empty then
     if textadept.editing.autocomplete('word') == true then return true end
     local line, pos = buffer:get_cur_line()
-    return not line:sub(1, pos):find('^%s*$')
+    return not line:sub(1, pos - 1):find('^%s*$')
   end
   return false
 end
@@ -303,7 +303,7 @@ keys['c\b'], keys['cs\b'] = buffer.del_word_left, buffer.del_line_left
 
 -- Miscellaneous not in standard menu.
 keys[GUI and 'aW' or 'mW'] = function()
-  buffer:drop_selection_n(buffer.selections - 1)
+  buffer:drop_selection_n(buffer.selections)
 end
 local char = ' '
 local function goto_char()
