@@ -162,8 +162,7 @@ local m_indentation = m_buffer[_L['Indentation']]
 -- Encoding.
 -- TODO: m_buffer[_L['Encoding']][_L['UTF-8 Encoding']][2]
 -- TODO: m_buffer[_L['Encoding']][_L['ASCII Encoding']][2]
--- TODO: m_buffer[_L['Encoding']][_L['ISO-8859-1 Encoding']][2]
--- TODO: m_buffer[_L['Encoding']][_L['MacRoman Encoding']][2]
+-- TODO: m_buffer[_L['Encoding']][_L['CP-1252 Encoding']][2]
 -- TODO: m_buffer[_L['Encoding']][_L['UTF-16 Encoding']][2]
 -- TODO: m_buffer[_L['Toggle View EOL']][2]
 -- TODO: m_buffer[_L['Toggle Wrap Mode']][2]
@@ -185,8 +184,8 @@ keys[GUI and 'cax' or 'cmx'] = m_view[_L['Unsplit View']][2]
 -- TODO: m_view[_L['Toggle Show Indent Guides']][2]
 -- TODO: m_view[_L['Toggle Virtual Space']][2]
 if GUI then
-  keys['c='] = buffer.zoom_in
-  keys['c-'] = buffer.zoom_out
+  keys['c='] = view.zoom_in
+  keys['c-'] = view.zoom_out
   keys['c0'] = m_view[_L['Reset Zoom']][2]
 end
 
@@ -276,11 +275,11 @@ keys.cm = buffer.new_line
 -- TODO: buffer.line_end_rect_extend
 -- TODO: buffer.page_down_rect_extend
 -- TODO: buffer.page_up_rect_extend
-keys.cl = buffer.vertical_centre_caret
--- TODO: buffer.line_scroll_down
--- TODO: buffer.line_scroll_up
--- TODO: buffer.scroll_to_start
--- TODO: buffer.scroll_to_end
+keys.cl = view.vertical_centre_caret
+-- TODO: view.line_scroll_down
+-- TODO: view.line_scroll_up
+-- TODO: view.scroll_to_start
+-- TODO: view.scroll_to_end
 keys['c '] = function() buffer.selection_mode = buffer.SEL_STREAM end
 keys['c]'] = buffer.swap_main_anchor_caret
 
@@ -359,8 +358,8 @@ for key, v in pairs{[next_key] = true, [prev_key] = false} do
     ui.find[v and 'find_next' or 'find_prev']()
   end
 end
-keys[GUI and 'a<' or 'm<'] = function() buffer:line_scroll(-20, 0) end
-keys[GUI and 'a>' or 'm>'] = function() buffer:line_scroll(20, 0) end
+keys[GUI and 'a<' or 'm<'] = function() view:line_scroll(-20, 0) end
+keys[GUI and 'a>' or 'm>'] = function() view:line_scroll(20, 0) end
 keys.cal = function()
   if #_VIEWS == 1 then return end
   view.size = ui.size[ui.get_split_table().vertical and 1 or 2] / 2

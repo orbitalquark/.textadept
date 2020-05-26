@@ -9,12 +9,13 @@ if not CURSES then
   buffer:set_theme(LINUX and 'dark' or 'light',
                    {font = 'DejaVu Sans Mono', fontsize = 12})
 end
-buffer.h_scroll_bar = false
-buffer.v_scroll_bar = false
-buffer.caret_period = 0
-buffer.caret_style = buffer.CARETSTYLE_BLOCK | buffer.CARETSTYLE_BLOCK_AFTER
-buffer.edge_mode = not CURSES and buffer.EDGE_LINE or buffer.EDGE_BACKGROUND
-buffer.edge_column = 80
+view.h_scroll_bar = false
+view.v_scroll_bar = false
+view.caret_period = 0
+view.caret_style = view.CARETSTYLE_BLOCK | view.CARETSTYLE_OVERSTRIKE_BLOCK |
+  view.CARETSTYLE_BLOCK_AFTER
+view.edge_mode = not CURSES and view.EDGE_LINE or view.EDGE_BACKGROUND
+view.edge_column = 80
 
 -- Settings for Textadept development.
 io.quick_open_filters[_HOME] = {
@@ -59,9 +60,9 @@ textadept.run.build_commands[scintilla_dir] = 'make -f check.mak'
 events.connect(events.FILE_OPENED, function(filename)
   if filename and
      (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
-    for i = 1, buffer.margins do buffer.margin_width_n[i] = 0 end
-    buffer.wrap_mode = buffer.WRAP_WHITESPACE
-    buffer.edge_mode = buffer.EDGE_NONE
+    for i = 1, view.margins do view.margin_width_n[i] = 0 end
+    view.wrap_mode = view.WRAP_WHITESPACE
+    view.edge_mode = view.EDGE_NONE
   end
 end)
 
