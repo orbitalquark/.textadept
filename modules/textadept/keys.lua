@@ -275,7 +275,7 @@ keys.cm = buffer.new_line
 -- TODO: buffer.line_end_rect_extend
 -- TODO: buffer.page_down_rect_extend
 -- TODO: buffer.page_up_rect_extend
-keys.cl = view.vertical_centre_caret
+keys.cl = view.vertical_center_caret
 -- TODO: view.line_scroll_down
 -- TODO: view.line_scroll_up
 -- TODO: view.scroll_to_start
