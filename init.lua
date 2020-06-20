@@ -146,11 +146,14 @@ m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
   if button == -1 then return end
   require('debugger.ansi_c').logging = true
   require('debugger.lua')
-  local args = '-n -f'
+  local args = {'-n -f'}
   if button == 1 then
-    args = args..[[ -e '_=require("debugger.lua.mobdebug").start()']]
+    args[#args + 1] = [[-e '_=require("debugger.lua")']] -- update package.cpath
+    args[#args + 1] = [[-e '_=require("debugger.lua.mobdebug").start()']]
   end
-  debugger.start('ansi_c', '/home/mitchell/code/textadept/textadept', args)
+  debugger.start(
+    'ansi_c', '/home/mitchell/code/textadept/textadept',
+    table.concat(args, ' '))
   debugger.continue('ansi_c')
   if button ~= 1 then return end
   timeout(0.1, function()
