@@ -366,7 +366,7 @@ keys[translate('alt+<')] = function() view:line_scroll(-20, 0) end
 keys[translate('alt+>')] = function() view:line_scroll(20, 0) end
 keys['ctrl+alt+l'] = function()
   if #_VIEWS == 1 then return end
-  view.size = ui.size[ui.get_split_table().vertical and 1 or 2] / 2
+  view.size = ui.size[ui.get_split_table().vertical and 1 or 2] // 2
 end
 
 -- Language modules or LSP.
