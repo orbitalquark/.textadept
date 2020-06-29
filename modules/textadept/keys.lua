@@ -301,12 +301,7 @@ keys.down, keys['shift+down'] = buffer.line_down, buffer.line_down_extend
 keys.up, keys['shift+up'] = buffer.line_up, buffer.line_up_extend
 keys.home, keys['shift+home'] = buffer.vc_home, buffer.vc_home_extend
 keys['end'], keys['shift+end']= buffer.line_end, buffer.line_end_extend
-keys.del, keys['shift+del'] = buffer.clear, buffer.cut
-keys['ctrl+del'] = buffer.del_word_right
-keys['ctrl+shift+del'] = buffer.del_line_right
-keys['\b'], keys['shift+\b'] = buffer.delete_back, buffer.delete_back
-keys['ctrl+\b'] = buffer.del_word_left
-keys['ctrl+shift+\b'] = buffer.del_line_left
+keys.del, keys['\b'] = buffer.clear, buffer.delete_back
 
 -- Miscellaneous not in standard menu.
 keys[translate('alt+W')] = function()
