@@ -318,6 +318,7 @@ local function goto_char()
       buffer.current_pos = buffer.target_start
     else
       buffer:goto_pos(buffer.target_start)
+      buffer:choose_caret_x()
     end
   end
 end
