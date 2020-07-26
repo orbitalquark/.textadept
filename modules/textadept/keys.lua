@@ -50,7 +50,7 @@ keys[translate('alt+D')] = buffer.line_duplicate
 keys[translate('alt+m')] = m_edit[_L['Match Brace']][2]
 -- m_edit[_L['Complete Word']][2] is '\t'
 keys[translate('ctrl+alt+w')] = textadept.editing.highlight_word
-keys[not CURSES and 'ctrl+/' or 'ctrl+_'] = textadept.editing.block_comment
+keys[not CURSES and 'ctrl+/' or 'ctrl+_'] = textadept.editing.toggle_comment
 keys['ctrl+t'] = textadept.editing.transpose_chars
 keys['ctrl+j'] = textadept.editing.join_lines
 keys[translate('alt+|')] = m_edit[_L['Filter Through']][2]
@@ -78,7 +78,7 @@ m_sel = m_edit[_L['Selection']]
 
 -- Search.
 local m_search = textadept.menu.menubar[_L['Search']]
-keys[translate('alt+s')] = m_search[_L['Find']][2]
+keys['ctrl+s'] = m_search[_L['Find Incremental']][2]
 -- TODO: ui.find.find_next
 -- TODO: ui.find.find_prev
 -- TODO: ui.find.replace
@@ -88,10 +88,6 @@ keys[translate('alt+s')] = m_search[_L['Find']][2]
 -- Replace is ar when find pane is focused in GUI.
 -- Replace All is aa when find pane is focused in GUI.
 -- Find in Files is ai when find pane is focused in GUI.
-keys['ctrl+s'] = function()
-  ui.find.in_files = false
-  ui.find.find_incremental()
-end
 keys[not CURSES and 'alt+S' or 'meta+S'] = m_search[_L['Find in Files']][2]
 -- TODO: m_search[_L['Goto Next File Found']][2]
 -- TODO: m_search[_L['Goto Previous File Found']][2]
@@ -414,19 +410,6 @@ end)
 --keys.f9 = debugger.toggle_breakpoint
 
 -- Other.
-ui.find.find_incremental_keys[translate('alt+n')] = function()
-  ui.find.find_entry_text = ui.command_entry:get_text() -- save
-  ui.find.find_incremental(ui.command_entry:get_text(), true, true)
-end
-ui.find.find_incremental_keys[translate('alt+p')] = function()
-  ui.find.find_incremental(ui.command_entry:get_text(), false, true)
-end
-ui.find.find_incremental_keys[translate('alt+m')] = function()
-  ui.find.match_case = not ui.find.match_case
-  ui.statusbar_text = 'Match case '..(ui.find.match_case and 'on' or 'off')
-  ui.find.find_incremental(ui.command_entry:get_text(), true)
-end
-ui.find.find_incremental_keys['\n'] = nil -- close on Enter
 -- if OSX or CURSES then
   -- UTF-8 input.
   -- TODO: function()

@@ -1,21 +1,22 @@
 -- Copyright 2007-2020 Mitchell mitchell.att.foicica.com. See LICENSE.
 
-ui.tabs = false
-
-textadept.editing.strip_trailing_spaces = true
-textadept.file_types.extensions.luadoc = 'lua'
-
 if not CURSES then
-  view:set_theme(LINUX and 'dark' or 'light',
-                 {font = 'DejaVu Sans Mono', fontsize = 12})
+  view:set_theme(
+    LINUX and 'dark' or 'light', {font = 'DejaVu Sans Mono', size = 12})
 end
-view.h_scroll_bar = false
-view.v_scroll_bar = false
+
+view.h_scroll_bar, view.v_scroll_bar = false, false
 view.caret_period = 0
 view.caret_style = view.CARETSTYLE_BLOCK | view.CARETSTYLE_OVERSTRIKE_BLOCK |
   view.CARETSTYLE_BLOCK_AFTER
 view.edge_mode = not CURSES and view.EDGE_LINE or view.EDGE_BACKGROUND
 view.edge_column = 80
+
+ui.tabs = false
+
+textadept.editing.strip_trailing_spaces = true
+textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
+textadept.file_types.extensions.luadoc = 'lua'
 
 -- Settings for Textadept development.
 io.quick_open_filters[_HOME] = {
@@ -23,7 +24,7 @@ io.quick_open_filters[_HOME] = {
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx',
   '!.orig', '!.rej',
   -- Folders to exclude.
-  '![/\\]%.hg$',
+  '!/%.hg$',
   '!doc/api', '!doc/book',
   '!gtdialog/cdk',
   '!images',
@@ -118,12 +119,11 @@ ctags.api_commands[_HOME] = function()
   os.spawn('make -C '.._HOME..'/src luadoc'):wait()
   return nil -- keep default behavior
 end
-local api_files = textadept.editing.api_files
 local function ta_api()
   return (buffer.filename or ''):find(_HOME) and _HOME..'/api' or nil
 end
-api_files.ansi_c[#api_files.ansi_c + 1] = ta_api
-api_files.cpp[#api_files.cpp + 1] = ta_api
+table.insert(textadept.editing.api_files.ansi_c, ta_api)
+table.insert(textadept.editing.api_files.cpp, ta_api)
 
 -- Spellcheck module.
 require('spellcheck')
@@ -389,9 +389,10 @@ events.connect(events.LEXER_LOADED, function(lexer)
   snippets.bwep = wrap('buffer:word_end_position')
   snippets.bwsp = wrap('buffer:word_start_position')
   -- Love framework autocompletion and documentation.
-  _M.lua.tags[#_M.lua.tags + 1] = _USERHOME..'/modules/lua/love_0.9.2f_tags'
-  local lua_api_files = textadept.editing.api_files.lua
-  lua_api_files[#lua_api_files + 1] = _USERHOME..'/modules/lua/love_0.9.2f_api'
+  _M.lua.tags[#_M.lua.tags + 1] = _USERHOME .. '/modules/lua/love_0.9.2f_tags'
+  table.insert(
+    textadept.editing.api_files.lua,
+    _USERHOME .. '/modules/lua/love_0.9.2f_api')
   _M.lua.expr_types['^love%.audio%.newSource%('] = 'Source'
   _M.lua.expr_types['^love%.filesystem%.newFile%('] = 'File'
   _M.lua.expr_types['^love%.graphics%.newCanvas%('] = 'Canvas'
