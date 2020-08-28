@@ -13,9 +13,12 @@ view.edge_mode = not CURSES and view.EDGE_LINE or view.EDGE_BACKGROUND
 view.edge_column = 80
 
 ui.tabs = false
+ui.find.highlight_all_matches = true
 
-textadept.editing.strip_trailing_spaces = true
+textadept.editing.auto_pairs[string.byte('`')] = '`'
+textadept.editing.typeover_chars[string.byte('`')] = true
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
+textadept.editing.auto_enclose = true
 textadept.file_types.extensions.luadoc = 'lua'
 
 -- Settings for Textadept development.
@@ -65,6 +68,11 @@ events.connect(events.FILE_OPENED, function(filename)
     view.wrap_mode = view.WRAP_WHITESPACE
     view.edge_mode = view.EDGE_NONE
   end
+end)
+
+-- Always strip trailing spaces, except in patch files.
+events.connect(events.LEXER_LOADED, function(name)
+  textadept.editing.strip_trailing_spaces = name ~= 'diff'
 end)
 
 -- VCS diff of current file.
@@ -191,8 +199,8 @@ events.connect(events.CHAR_ADDED, function(ch)
 end)
 
 -- Load C snippets.
-events.connect(events.LEXER_LOADED, function(lexer)
-  if lexer ~= 'ansi_c' or snippets.ansi_c.mal then return end
+events.connect(events.LEXER_LOADED, function(name)
+  if name ~= 'ansi_c' or snippets.ansi_c.mal then return end
   local snippets = snippets.ansi_c
   local wrap = require('snippet_wrapper')
   -- C Standard library.
@@ -338,8 +346,8 @@ events.connect(events.LEXER_LOADED, function(lexer)
 end)
 
 -- Load Lua snippets, autocompletion and documentation files, and REPL module.
-events.connect(events.LEXER_LOADED, function(lexer)
-  if lexer ~= 'lua' or snippets.lua.cat then return end
+events.connect(events.LEXER_LOADED, function(name)
+  if name ~= 'lua' or snippets.lua.cat then return end
   local snippets = snippets.lua
   local wrap = require('snippet_wrapper')
   -- Lua.

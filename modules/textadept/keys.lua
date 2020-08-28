@@ -75,6 +75,7 @@ m_sel = m_edit[_L['Selection']]
 -- TODO: m_sel[_L['Enclose in Braces']][2]
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
+keys[translate('alt+~')] = m_edit[_L['Preferences']][2]
 
 -- Search.
 local m_search = textadept.menu.menubar[_L['Search']]
@@ -163,11 +164,9 @@ local m_indentation = m_buffer[_L['Indentation']]
 -- TODO: m_buffer[_L['Encoding']][_L['ASCII Encoding']][2]
 -- TODO: m_buffer[_L['Encoding']][_L['CP-1252 Encoding']][2]
 -- TODO: m_buffer[_L['Encoding']][_L['UTF-16 Encoding']][2]
--- TODO: m_buffer[_L['Toggle View EOL']][2]
 -- TODO: m_buffer[_L['Toggle Wrap Mode']][2]
 -- TODO: m_buffer[_L['Toggle View Whitespace']][2]
 -- TODO: textadept.file_types.select_lexer
--- TODO: m_buffer[_L['Refresh Syntax Highlighting']][2]
 
 -- Views.
 local m_view = textadept.menu.menubar[_L['View']]
