@@ -1,4 +1,4 @@
--- Copyright 2007-2020 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2007-2020 Mitchell. See LICENSE.
 
 --[[ This comment is for LuaDoc.
 ---
@@ -6,7 +6,7 @@
 module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
--- ca: a cdefg~~jk m o qrstuv  yz~\]^_
+-- ca: a cdefg~~jk m o qrstuvw yz~\]^_
 -- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_`~~~~~%^&*()-  []{}\         / \b~
 
 local keys = keys
@@ -49,7 +49,6 @@ keys[translate('alt+D')] = buffer.line_duplicate
 -- TODO: buffer.select_all
 keys[translate('alt+m')] = m_edit[_L['Match Brace']][2]
 -- m_edit[_L['Complete Word']][2] is '\t'
-keys[translate('ctrl+alt+w')] = textadept.editing.highlight_word
 keys[not CURSES and 'ctrl+/' or 'ctrl+_'] = textadept.editing.toggle_comment
 keys['ctrl+t'] = textadept.editing.transpose_chars
 keys['ctrl+j'] = textadept.editing.join_lines
@@ -75,6 +74,10 @@ m_sel = m_edit[_L['Selection']]
 -- TODO: m_sel[_L['Enclose in Braces']][2]
 -- TODO: buffer.move_selected_lines_up
 -- TODO: buffer.move_selected_lines_down
+-- History.
+keys[translate('alt+,')] = textadept.history.back
+keys[translate('alt+.')] = textadept.history.forward
+-- Preferences.
 keys[translate('alt+~')] = m_edit[_L['Preferences']][2]
 
 -- Search.
@@ -387,8 +390,6 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
 end)
 
---keys[translate('alt+,')] = history.back
---keys[translate('alt+.')] = history.forward
 --keys.f12 = ctags.goto_tag
 --keys['shift+f12'] = m_ctags['G_oto Ctag...'][2]
 --keys.f6 = file_diff.start

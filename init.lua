@@ -1,4 +1,4 @@
--- Copyright 2007-2020 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2007-2020 Mitchell. See LICENSE.
 
 if not CURSES then
   view:set_theme(
@@ -28,16 +28,13 @@ io.quick_open_filters[_HOME] = {
   '!.orig', '!.rej',
   -- Folders to exclude.
   '!/%.hg$',
-  '!doc/api', '!doc/book',
-  '!gtdialog/cdk',
   '!images',
   '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
-  '!modules/file_diff/diff_match_patch', '!modules/file_diff/test',
   '!modules/spellcheck/hunspell',
-  '!modules/yaml/src',
+  '!modules/yaml/libyaml', '!modules/yaml/lyaml',
   '!releases',
-  '!scintilla/cocoa', '!scintilla/doc', '!scintilla/lua',
-  '!scintilla/qt', '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
+  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt',
+  '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
   '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
   -- Files to exclude.
   '!api$', '![^c]tags$'
@@ -56,14 +53,10 @@ io.quick_open_filters[_USERHOME] = {
   '!/%.hg$' -- folders
 }
 
--- Settings for Scintilla LongTerm3 development.
-local scintilla_dir = '/home/mitchell/code/scintilla'
-textadept.run.build_commands[scintilla_dir] = 'make -f check.mak'
-
 -- Hide margins when writing e-mails and commit messages.
 events.connect(events.FILE_OPENED, function(filename)
   if filename and
-     (filename:find('pico%.%d+$') or filename:find('hg%-editor')) then
+     (filename:find('tmpmsg%-0x%x+') or filename:find('hg%-editor')) then
     for i = 1, view.margins do view.margin_width_n[i] = 0 end
     view.wrap_mode = view.WRAP_WHITESPACE
     view.edge_mode = view.EDGE_NONE
@@ -82,10 +75,10 @@ table.insert(m_file, #m_file - 1, {'VCS Diff', function()
   local root = io.get_project_root()
   if not buffer.filename or not root then return end
   local diff
-  if lfs.attributes(root..'/.hg') then
-    diff = os.spawn('hg diff "'..buffer.filename..'"', root):read('a')
-  elseif lfs.attributes(root..'/.git') then
-    diff = os.spawn('git diff "'..buffer.filename..'"', root):read('a')
+  if lfs.attributes(root .. '/.hg') then
+    diff = os.spawn('hg diff "' .. buffer.filename .. '"', root):read('a')
+  elseif lfs.attributes(root .. '/.git') then
+    diff = os.spawn('git diff "' .. buffer.filename .. '"', root):read('a')
   else
     return
   end
@@ -107,16 +100,25 @@ table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
   if button == 1 then os.spawn(command, root, ui.print, ui.print) end
 end})
 
--- History module.
-require('history')
-
 -- Ctags module.
 local ctags = require('ctags')
-ctags[_HOME] = _HOME..'/modules/lua/ta_tags'
-ctags[_HOME..'/src/scintilla'] = _HOME..'/tags'
-ctags[_USERHOME] = _HOME..'/modules/lua/ta_tags'
 
 -- Settings for Textadept development.
+local ta_tags = {_HOME .. '/modules/lua/ta_tags'}
+local extra_tags = {
+  _HOME .. '/modules/ctags/tags',
+  _HOME .. '/modules/debugger/tags',
+  _HOME .. '/modules/export/tags',
+  _HOME .. '/modules/file_diff/tags',
+  _HOME .. '/modules/lsp/tags',
+  _HOME .. '/modules/lua_repl/tags',
+  _HOME .. '/modules/open_file_mode/tags',
+  _HOME .. '/modules/spellcheck/tags'
+}
+for _, tags in ipairs(extra_tags) do ta_tags[#ta_tags + 1] = tags end
+ctags[_HOME] = ta_tags
+ctags[_HOME .. '/src/scintilla'] = _HOME .. '/tags'
+ctags[_USERHOME] = ta_tags
 ctags.ctags_flags[_HOME] = table.concat({
   '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c',
   'src/scintilla/curses', 'src/scintilla/gtk', 'src/scintilla/include',
@@ -124,14 +126,25 @@ ctags.ctags_flags[_HOME] = table.concat({
   'src/scintilla/lexers/LexLPeg.cxx'
 }, ' ')
 ctags.api_commands[_HOME] = function()
-  os.spawn('make -C '.._HOME..'/src luadoc'):wait()
+  os.spawn('make -C ' .. _HOME .. '/src luadoc'):wait()
   return nil -- keep default behavior
 end
 local function ta_api()
-  return (buffer.filename or ''):find(_HOME) and _HOME..'/api' or nil
+  return (buffer.filename or ''):find(_HOME) and _HOME .. '/api' or nil
 end
+-- Load tags and api for external modules.
+events.connect(events.LEXER_LOADED, function(name)
+  if name ~= 'lua' or _M.lua._extras then return end
+  for _, tags in ipairs(extra_tags) do
+    table.insert(_M.lua.tags, tags)
+    table.insert(textadept.editing.api_files.lua, (tags:gsub('tags$', 'api')))
+  end
+  _M.lua._extras = true
+end)
 table.insert(textadept.editing.api_files.ansi_c, ta_api)
 table.insert(textadept.editing.api_files.cpp, ta_api)
+table.insert(
+  textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/lua_api')
 
 -- Spellcheck module.
 require('spellcheck')
@@ -198,22 +211,26 @@ events.connect(events.CHAR_ADDED, function(ch)
   end
 end)
 
--- Load C snippets.
+-- Load C and C++ snippets.
 events.connect(events.LEXER_LOADED, function(name)
-  if name ~= 'ansi_c' or snippets.ansi_c.mal then return end
-  local snippets = snippets.ansi_c
+  if name ~= 'ansi_c' and name ~= 'cpp' then return end
+  if not snippets[name] then snippets[name] = {} end
+  if snippets[name].lai then return end
+  local snippets = snippets[name]
   local wrap = require('snippet_wrapper')
   -- C Standard library.
-  snippets.mal = wrap('malloc')
-  snippets.cal = wrap('calloc')
-  snippets.real = wrap('realloc')
-  snippets.cp = wrap('strcpy')
-  snippets.mcp = wrap('memcpy')
-  snippets.ncp = wrap('strncpy')
-  snippets.cmp = wrap('strcmp')
-  snippets.ncmp = wrap('strncmp')
-  snippets.va = 'va_list %1(ap);\nva_start(%1, %2(lastparam))\n%0\nva_end(%1)'
-  snippets.vaa = 'va_arg(%1(ap), %2(int));'
+  if name == 'ansi_c' then
+    snippets.mal = wrap('malloc')
+    snippets.cal = wrap('calloc')
+    snippets.real = wrap('realloc')
+    snippets.cp = wrap('strcpy')
+    snippets.mcp = wrap('memcpy')
+    snippets.ncp = wrap('strncpy')
+    snippets.cmp = wrap('strcmp')
+    snippets.ncmp = wrap('strncmp')
+    snippets.va = 'va_list %1(ap);\nva_start(%1, %2(lastparam))\n%0\nva_end(%1)'
+    snippets.vaa = 'va_arg(%1(ap), %2(int));'
+  end
   -- Lua Standard library.
   snippets.lai = wrap('lua_absindex')
   snippets.lap = wrap('lua_atpanic')
