@@ -1,4 +1,4 @@
--- Copyright 2015-2020 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- Copyright 2015-2020 Mitchell. See LICENSE.
 
 -- Retrieves the API documentation for function name *symbol* in lexer language
 -- *lang* and returns its signature in snippet form for insertion.
@@ -20,10 +20,14 @@ local function get_api_snippet(symbol, lang)
       if api_file and lfs.attributes(api_file) then
         for line in io.lines(api_file) do
           if line:find(symbol_patt) then
-            apis[#apis + 1] = line:match(signature_patt)
-            if lang == 'lua' and not line:match(signature_patt) then
+            local args = line:match(signature_patt)
+            if args then
+              if args:find('%(', 2) then goto continue end -- expression
+              apis[#apis + 1] = args
+            elseif lang == 'lua' then
               apis[#apis + 1] = line:match((signature_patt:gsub(':', '.')))
             end
+            ::continue::
           end
         end
       end
