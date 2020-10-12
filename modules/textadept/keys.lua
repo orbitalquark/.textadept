@@ -82,7 +82,9 @@ keys[translate('alt+~')] = m_edit[_L['Preferences']][2]
 
 -- Search.
 local m_search = textadept.menu.menubar[_L['Search']]
-keys['ctrl+s'] = m_search[_L['Find Incremental']][2]
+keys['ctrl+s'] = function()
+  m_search[_L[buffer.selection_empty and 'Find Incremental' or 'Find']][2]()
+end
 -- TODO: ui.find.find_next
 -- TODO: ui.find.find_prev
 -- TODO: ui.find.replace
