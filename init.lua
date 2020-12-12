@@ -211,208 +211,204 @@ events.connect(events.CHAR_ADDED, function(ch)
   end
 end)
 
--- Load C and C++ snippets.
-events.connect(events.LEXER_LOADED, function(name)
-  if name ~= 'ansi_c' and name ~= 'cpp' then return end
-  if not snippets[name] then snippets[name] = {} end
-  if snippets[name].lai then return end
-  local snippets = snippets[name]
-  local wrap = require('snippet_wrapper')
+local wrap = require('snippet_wrapper')
+for _, lexer in ipairs{'ansi_c', 'cpp'} do
+  local snip = snippets[lexer]
   -- C Standard library.
-  if name == 'ansi_c' then
-    snippets.mal = wrap('malloc')
-    snippets.cal = wrap('calloc')
-    snippets.real = wrap('realloc')
-    snippets.cp = wrap('strcpy')
-    snippets.mcp = wrap('memcpy')
-    snippets.ncp = wrap('strncpy')
-    snippets.cmp = wrap('strcmp')
-    snippets.ncmp = wrap('strncmp')
-    snippets.va = 'va_list %1(ap);\nva_start(%1, %2(lastparam))\n%0\nva_end(%1)'
-    snippets.vaa = 'va_arg(%1(ap), %2(int));'
+  if lexer == 'ansi_c' then
+    snip.mal = wrap('malloc')
+    snip.cal = wrap('calloc')
+    snip.real = wrap('realloc')
+    snip.cp = wrap('strcpy')
+    snip.mcp = wrap('memcpy')
+    snip.ncp = wrap('strncpy')
+    snip.cmp = wrap('strcmp')
+    snip.ncmp = wrap('strncmp')
+    snip.va = 'va_list %1(ap);\nva_start(%1, %2(lastparam))\n%0\nva_end(%1)'
+    snip.vaa = 'va_arg(%1(ap), %2(int));'
   end
   -- Lua Standard library.
-  snippets.lai = wrap('lua_absindex')
-  snippets.lap = wrap('lua_atpanic')
-  snippets.larith = wrap('lua_arith')
-  snippets.lcat = wrap('lua_concat')
-  snippets.lc = wrap('lua_call')
-  snippets.lcmp = wrap('lua_compare')
-  snippets.lcp = wrap('lua_copy')
-  snippets.lcs = wrap('lua_checkstack')
-  snippets.lct = wrap('lua_createtable')
-  snippets.lgf = wrap('lua_getfield')
-  snippets.lgg = wrap('lua_getglobal')
-  snippets.lgi = wrap('lua_geti')
-  snippets.lgmt = wrap('lua_getmetatable')
-  snippets.lgt = wrap('lua_gettable')
-  snippets.lgtop = wrap('lua_gettop')
-  snippets.lguv = wrap('lua_getuservalue')
-  snippets.lib = wrap('lua_isboolean')
-  snippets.licf = wrap('lua_iscfunction')
-  snippets.lif = wrap('lua_isfunction')
-  snippets.lii = wrap('lua_isinteger')
-  snippets.lilu = wrap('lua_islightuserdata')
-  snippets.lin = wrap('lua_isnumber')
-  snippets.linil = wrap('lua_isnil')
-  snippets.linone = wrap('lua_isnone')
-  snippets.linonen = wrap('lua_isnoneornil')
-  snippets.lins = wrap('lua_insert')
-  snippets.lint = 'lua_Integer'
-  snippets.lis = wrap('lua_isstring')
-  snippets.lit = wrap('lua_istable')
-  snippets.liu = wrap('lua_isuserdata')
-  snippets.liy = wrap('lua_isyieldable')
-  snippets.llen = wrap('lua_len')
-  snippets.ln = wrap('lua_next')
-  snippets.lnt = wrap('lua_newtable')
-  snippets.lnth = wrap('lua_newthread')
-  snippets.lnu = '(%3 *)lua_newuserdata(%1(L), %2(sizeof(%3(struct))))'
-  snippets.lnum = 'lua_Number'
-  snippets.lpb = wrap('lua_pushboolean')
-  snippets.lpcc = wrap('lua_pushcclosure')
-  snippets.lpcf = wrap('lua_pushcfunction')
-  snippets.lpc = wrap('lua_pcall')
-  snippets.lpg = wrap('lua_pushglobaltable')
-  snippets.lpi = wrap('lua_pushinteger')
-  snippets.lplit = wrap('lua_pushliteral')
-  snippets.lpls = wrap('lua_pushlstring')
-  snippets.lplu = wrap('lua_pushlightuserdata')
-  snippets.lpn = wrap('lua_pushnumber')
-  snippets.lpnil = wrap('lua_pushnil')
-  snippets.lpop = wrap('lua_pop')
-  snippets.lps = wrap('lua_pushstring')
-  snippets.lpth = wrap('lua_pushthread')
-  snippets.lpv = wrap('lua_pushvalue')
-  snippets.lre = wrap('lua_rawequal')
-  snippets.lrepl = wrap('lua_replace')
-  snippets.lr = wrap('lua_register')
-  snippets.lrg = wrap('lua_rawget')
-  snippets.lrgi = wrap('lua_rawgeti')
-  snippets.lrgp = wrap('lua_rawgetp')
-  snippets.lrlen = wrap('lua_rawlen')
-  snippets.lrm = wrap('lua_remove')
-  snippets.lrs = wrap('lua_rawset')
-  snippets.lrsi = wrap('lua_rawseti')
-  snippets.lrsp = wrap('lua_rawsetp')
-  snippets.lsf = wrap('lua_setfield')
-  snippets.lsg = wrap('lua_setglobal')
-  snippets.lsi = wrap('lua_seti')
-  snippets.ls = 'lua_State'
-  snippets.lsmt = wrap('lua_setmetatable')
-  snippets.lst = wrap('lua_settable')
-  snippets.lsuv = wrap('lua_setuservalue')
-  snippets.ltb = wrap('lua_toboolean')
-  snippets.ltcf = wrap('lua_tocfunction')
-  snippets.lt = wrap('lua_type')
-  snippets.lti = wrap('lua_tointeger')
-  snippets.ltls = wrap('lua_tolstring')
-  snippets.ltn = wrap('lua_tonumber')
-  snippets.lts = wrap('lua_tostring')
-  snippets.ltth = wrap('lua_tothread')
-  snippets.ltu = '(%3 *)lua_touserdata(%1(L), %2(index))'
-  snippets.luvi = wrap('lua_upvalueindex')
+  snip.lai = wrap('lua_absindex')
+  snip.lap = wrap('lua_atpanic')
+  snip.larith = wrap('lua_arith')
+  snip.lcat = wrap('lua_concat')
+  snip.lc = wrap('lua_call')
+  snip.lcmp = wrap('lua_compare')
+  snip.lcp = wrap('lua_copy')
+  snip.lcs = wrap('lua_checkstack')
+  snip.lct = wrap('lua_createtable')
+  snip.lgf = wrap('lua_getfield')
+  snip.lgg = wrap('lua_getglobal')
+  snip.lgi = wrap('lua_geti')
+  snip.lgmt = wrap('lua_getmetatable')
+  snip.lgt = wrap('lua_gettable')
+  snip.lgtop = wrap('lua_gettop')
+  snip.lguv = wrap('lua_getuservalue')
+  snip.lib = wrap('lua_isboolean')
+  snip.licf = wrap('lua_iscfunction')
+  snip.lif = wrap('lua_isfunction')
+  snip.lii = wrap('lua_isinteger')
+  snip.lilu = wrap('lua_islightuserdata')
+  snip.lin = wrap('lua_isnumber')
+  snip.linil = wrap('lua_isnil')
+  snip.linone = wrap('lua_isnone')
+  snip.linonen = wrap('lua_isnoneornil')
+  snip.lins = wrap('lua_insert')
+  snip.lint = 'lua_Integer'
+  snip.lis = wrap('lua_isstring')
+  snip.lit = wrap('lua_istable')
+  snip.liu = wrap('lua_isuserdata')
+  snip.liy = wrap('lua_isyieldable')
+  snip.llen = wrap('lua_len')
+  snip.ln = wrap('lua_next')
+  snip.lnt = wrap('lua_newtable')
+  snip.lnth = wrap('lua_newthread')
+  snip.lnu = '(%3 *)lua_newuserdata(%1(L), %2(sizeof(%3(struct))))'
+  snip.lnum = 'lua_Number'
+  snip.lpb = wrap('lua_pushboolean')
+  snip.lpcc = wrap('lua_pushcclosure')
+  snip.lpcf = wrap('lua_pushcfunction')
+  snip.lpc = wrap('lua_pcall')
+  snip.lpg = wrap('lua_pushglobaltable')
+  snip.lpi = wrap('lua_pushinteger')
+  snip.lplit = wrap('lua_pushliteral')
+  snip.lpls = wrap('lua_pushlstring')
+  snip.lplu = wrap('lua_pushlightuserdata')
+  snip.lpn = wrap('lua_pushnumber')
+  snip.lpnil = wrap('lua_pushnil')
+  snip.lpop = wrap('lua_pop')
+  snip.lps = wrap('lua_pushstring')
+  snip.lpth = wrap('lua_pushthread')
+  snip.lpv = wrap('lua_pushvalue')
+  snip.lre = wrap('lua_rawequal')
+  snip.lrepl = wrap('lua_replace')
+  snip.lr = wrap('lua_register')
+  snip.lrg = wrap('lua_rawget')
+  snip.lrgi = wrap('lua_rawgeti')
+  snip.lrgp = wrap('lua_rawgetp')
+  snip.lrlen = wrap('lua_rawlen')
+  snip.lrm = wrap('lua_remove')
+  snip.lrs = wrap('lua_rawset')
+  snip.lrsi = wrap('lua_rawseti')
+  snip.lrsp = wrap('lua_rawsetp')
+  snip.lsf = wrap('lua_setfield')
+  snip.lsg = wrap('lua_setglobal')
+  snip.lsi = wrap('lua_seti')
+  snip.ls = 'lua_State'
+  snip.lsmt = wrap('lua_setmetatable')
+  snip.lst = wrap('lua_settable')
+  snip.lsuv = wrap('lua_setuservalue')
+  snip.ltb = wrap('lua_toboolean')
+  snip.ltcf = wrap('lua_tocfunction')
+  snip.lt = wrap('lua_type')
+  snip.lti = wrap('lua_tointeger')
+  snip.ltls = wrap('lua_tolstring')
+  snip.ltn = wrap('lua_tonumber')
+  snip.lts = wrap('lua_tostring')
+  snip.ltth = wrap('lua_tothread')
+  snip.ltu = '(%3 *)lua_touserdata(%1(L), %2(index))'
+  snip.luvi = wrap('lua_upvalueindex')
   -- Auxiliary library.
-  snippets.llac = wrap('luaL_argcheck')
-  snippets.llach = 'luaL_addchar(&%1(buf), %2(c))'
-  snippets.llae = wrap('luaL_argerror')
-  snippets.llals = 'luaL_addlstring(&%1(buf), %2(s), %3(len))'
-  snippets.llas = 'luaL_addstring(&%1(buf), %2(s))'
-  snippets.llasz = 'luaL_addsize(&%1(buf), %2(n))'
-  snippets.llav = 'luaL_addvalue(&%1(buf))'
-  snippets.llbi = 'luaL_buffinit(%1(L), &%2(buf))'
-  snippets.llbis = 'luaL_buffinitsize(%1(L), &%2(buf), %3(size))'
-  snippets.llb = 'luaL_Buffer'
-  snippets.llca = wrap('luaL_checkany')
-  snippets.llci = wrap('luaL_checkinteger')
-  snippets.llcls = wrap('luaL_checklstring')
-  snippets.llcm = wrap('luaL_callmeta')
-  snippets.llcn = wrap('luaL_checknumber')
-  snippets.llcs = wrap('luaL_checkstring')
-  snippets.llct = wrap('luaL_checktype')
-  snippets.llcu = '(%4 *)luaL_checkudata(%1(L), %2(arg), %3(mt_name))'
-  snippets.lldf = wrap('luaL_dofile')
-  snippets.llds = wrap('luaL_dostring')
-  snippets.llerr = wrap('luaL_error')
-  snippets.llgmf = wrap('luaL_getmetafield')
-  snippets.llgmt = wrap('luaL_getmetatable')
-  snippets.llgs = wrap('luaL_gsub')
-  snippets.llgst = wrap('luaL_getsubtable')
-  snippets.lllen = wrap('luaL_len')
-  snippets.lllf = wrap('luaL_loadfile')
-  snippets.llls = wrap('luaL_loadstring')
-  snippets.llnmt = wrap('luaL_newmetatable')
-  snippets.llns = wrap('luaL_newstate')
-  snippets.lloi = wrap('luaL_optinteger')
-  snippets.llol = wrap('luaL_openlibs')
-  snippets.llon = wrap('luaL_optnumber')
-  snippets.llos = wrap('luaL_optstring')
-  snippets.llpb = 'luaL_prepbuffer(&%1(buf))'
-  snippets.llpbs = 'luaL_prepbuffersize(&%1(buf), %2(size))'
-  snippets.llpr = 'luaL_pushresult(&%1(buf))'
-  snippets.llprs = 'luaL_pushresultsize(&%1(buf), %2(size))'
-  snippets.llref = wrap('luaL_ref')
-  snippets.llsmt = wrap('luaL_setmetatable')
-  snippets.lltu = '(%4 *)luaL_testudata(%1(L), %2(arg), %3(mt_name))'
-  snippets.lluref = wrap('luaL_unref')
+  snip.llac = wrap('luaL_argcheck')
+  snip.llach = 'luaL_addchar(&%1(buf), %2(c))'
+  snip.llae = wrap('luaL_argerror')
+  snip.llals = 'luaL_addlstring(&%1(buf), %2(s), %3(len))'
+  snip.llas = 'luaL_addstring(&%1(buf), %2(s))'
+  snip.llasz = 'luaL_addsize(&%1(buf), %2(n))'
+  snip.llav = 'luaL_addvalue(&%1(buf))'
+  snip.llbi = 'luaL_buffinit(%1(L), &%2(buf))'
+  snip.llbis = 'luaL_buffinitsize(%1(L), &%2(buf), %3(size))'
+  snip.llb = 'luaL_Buffer'
+  snip.llca = wrap('luaL_checkany')
+  snip.llci = wrap('luaL_checkinteger')
+  snip.llcls = wrap('luaL_checklstring')
+  snip.llcm = wrap('luaL_callmeta')
+  snip.llcn = wrap('luaL_checknumber')
+  snip.llcs = wrap('luaL_checkstring')
+  snip.llct = wrap('luaL_checktype')
+  snip.llcu = '(%4 *)luaL_checkudata(%1(L), %2(arg), %3(mt_name))'
+  snip.lldf = wrap('luaL_dofile')
+  snip.llds = wrap('luaL_dostring')
+  snip.llerr = wrap('luaL_error')
+  snip.llgmf = wrap('luaL_getmetafield')
+  snip.llgmt = wrap('luaL_getmetatable')
+  snip.llgs = wrap('luaL_gsub')
+  snip.llgst = wrap('luaL_getsubtable')
+  snip.lllen = wrap('luaL_len')
+  snip.lllf = wrap('luaL_loadfile')
+  snip.llls = wrap('luaL_loadstring')
+  snip.llnmt = wrap('luaL_newmetatable')
+  snip.llns = wrap('luaL_newstate')
+  snip.lloi = wrap('luaL_optinteger')
+  snip.llol = wrap('luaL_openlibs')
+  snip.llon = wrap('luaL_optnumber')
+  snip.llos = wrap('luaL_optstring')
+  snip.llpb = 'luaL_prepbuffer(&%1(buf))'
+  snip.llpbs = 'luaL_prepbuffersize(&%1(buf), %2(size))'
+  snip.llpr = 'luaL_pushresult(&%1(buf))'
+  snip.llprs = 'luaL_pushresultsize(&%1(buf), %2(size))'
+  snip.llref = wrap('luaL_ref')
+  snip.llsmt = wrap('luaL_setmetatable')
+  snip.lltu = '(%4 *)luaL_testudata(%1(L), %2(arg), %3(mt_name))'
+  snip.lluref = wrap('luaL_unref')
   -- Other.
-  snippets.lf = [[static int %1(func)(lua_State *%2(L)) {
+  snip.lf = [[static int %1(func)(lua_State *%2(L)) {
     %0
     return %3(0);
   }]]
-end)
+end
 
 -- Load Lua snippets, autocompletion and documentation files, and REPL module.
+local snip = snippets.lua
+-- Lua.
+snip.cat = wrap('table.concat')
+snip.afunc = 'function(%1(args))\n\t%0\nend'
+snip.lfunc = 'local function %1(name)(%2(args))\n\t%0\nend'
+snip.loc = 'local %1(name) = %2(value)'
+snip.open = "local %1(f) = io.open(%2(file), '%3(r)')\n%0\n%1:close()"
+snip.openif = "local %1(f) = io.open(%2(file), '%3(r)')\n" ..
+  "if %1 then\n\t%0\n\t%1:close()\nend"
+snip.popen = "local %1(p) = io.popen(%2(cmd))\n%0\n%1:close()"
+-- Textadept.
+snip.ta = 'textadept'
+snip.tab = 'textadept.bookmarks'
+snip.tae = 'textadept.editing'
+snip.taft = 'textadept.file_types'
+snip.tam = 'textadept.menu'
+snip.tar = 'textadept.run'
+snip.tas = 'textadept.session'
+snip.uice = 'ui.command_entry'
+snip.uid = 'ui.dialogs'
+snip.uif = 'ui.find'
+snip.L = "_L['%1']"
+-- Scintilla.
+snip.banc = 'buffer.anchor'
+snip.bca = 'buffer.char_at[%1(pos)]'
+snip.bcp = 'buffer.current_pos'
+snip.bgcl = wrap('buffer:get_cur_line')
+snip.bgl = wrap('buffer:get_lexer')
+snip.bgp = wrap('buffer:goto_pos')
+snip.bgst = wrap('buffer:get_sel_text')
+snip.bgt = wrap('buffer:get_text')
+snip.blep = 'buffer.line_end_position[%1(line)]'
+snip.blfp = wrap('buffer:line_from_position')
+snip.bpfl = wrap('buffer:position_from_line')
+snip.brs = wrap('buffer:replace_sel')
+snip.brt = wrap('buffer:replace_target')
+snip.bsa = 'buffer.style_at[%1(pos)]'
+snip.bsele = 'buffer.selection_end'
+snip.bsels = 'buffer.selection_start'
+snip.bss = wrap('buffer:set_sel')
+snip.bst = wrap('buffer:set_target_range')
+snip.bte = 'buffer.target_end'
+snip.btr = wrap('buffer:text_range')
+snip.bts = 'buffer.target_start'
+snip.buf = 'buffer'
+snip.bwep = wrap('buffer:word_end_position')
+snip.bwsp = wrap('buffer:word_start_position')
+local loaded = false
 events.connect(events.LEXER_LOADED, function(name)
-  if name ~= 'lua' or snippets.lua.cat then return end
-  local snippets = snippets.lua
-  local wrap = require('snippet_wrapper')
-  -- Lua.
-  snippets.cat = wrap('table.concat')
-  snippets.afunc = 'function(%1(args))\n\t%0\nend'
-  snippets.lfunc = 'local function %1(name)(%2(args))\n\t%0\nend'
-  snippets.loc = 'local %1(name) = %2(value)'
-  snippets.open = "local %1(f) = io.open(%2(file), '%3(r)')\n%0\n%1:close()"
-  snippets.openif = "local %1(f) = io.open(%2(file), '%3(r)')\n"..
-    "if %1 then\n\t%0\n\t%1:close()\nend"
-  snippets.popen = "local %1(p) = io.popen(%2(cmd))\n%0\n%1:close()"
-  -- Textadept.
-  snippets.ta = 'textadept'
-  snippets.tab = 'textadept.bookmarks'
-  snippets.tae = 'textadept.editing'
-  snippets.taft = 'textadept.file_types'
-  snippets.tam = 'textadept.menu'
-  snippets.tar = 'textadept.run'
-  snippets.tas = 'textadept.session'
-  snippets.uice = 'ui.command_entry'
-  snippets.uid = 'ui.dialogs'
-  snippets.uif = 'ui.find'
-  snippets.L = "_L['%1']"
-  -- Scintilla.
-  snippets.banc = 'buffer.anchor'
-  snippets.bca = 'buffer.char_at[%1(pos)]'
-  snippets.bcp = 'buffer.current_pos'
-  snippets.bgcl = wrap('buffer:get_cur_line')
-  snippets.bgl = wrap('buffer:get_lexer')
-  snippets.bgp = wrap('buffer:goto_pos')
-  snippets.bgst = wrap('buffer:get_sel_text')
-  snippets.bgt = wrap('buffer:get_text')
-  snippets.blep = 'buffer.line_end_position[%1(line)]'
-  snippets.blfp = wrap('buffer:line_from_position')
-  snippets.bpfl = wrap('buffer:position_from_line')
-  snippets.brs = wrap('buffer:replace_sel')
-  snippets.brt = wrap('buffer:replace_target')
-  snippets.bsa = 'buffer.style_at[%1(pos)]'
-  snippets.bsele = 'buffer.selection_end'
-  snippets.bsels = 'buffer.selection_start'
-  snippets.bss = wrap('buffer:set_sel')
-  snippets.bst = wrap('buffer:set_target_range')
-  snippets.bte = 'buffer.target_end'
-  snippets.btr = wrap('buffer:text_range')
-  snippets.bts = 'buffer.target_start'
-  snippets.buf = 'buffer'
-  snippets.bwep = wrap('buffer:word_end_position')
-  snippets.bwsp = wrap('buffer:word_start_position')
+  if name ~= 'lua' or loaded then return end
   -- Love framework autocompletion and documentation.
   _M.lua.tags[#_M.lua.tags + 1] = _USERHOME .. '/modules/lua/love_0.9.2f_tags'
   table.insert(
@@ -461,6 +457,7 @@ events.connect(events.LEXER_LOADED, function(name)
   _M.lua.expr_types['^love%.thread%.newThread%('] = 'Thread'
   _M.lua.expr_types['^love%.thread%.getChannel%('] = 'Channel'
   _M.lua.expr_types['^love%.thread%.newChannel%('] = 'Channel'
+  loaded = true
 end)
 -- Lua REPL.
 require('lua_repl')
