@@ -170,6 +170,7 @@ m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
   local args = {'-n -f'}
   if button == 1 then
     args[#args + 1] = [[-e '_=require("debugger.lua")']] -- update package.cpath
+    args[#args + 1] = [[-e '_=require("debugger.lua.mobdebug").coro()']]
     args[#args + 1] = [[-e '_=require("debugger.lua.mobdebug").start()']]
   end
   debugger.start(
