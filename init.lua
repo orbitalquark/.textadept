@@ -27,7 +27,7 @@ io.quick_open_filters[_HOME] = {
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx',
   '!.orig', '!.rej',
   -- Folders to exclude.
-  '!/%.hg$',
+  '!/%.hg$', '!/.git$',
   '!images',
   '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
   '!modules/spellcheck/hunspell',
