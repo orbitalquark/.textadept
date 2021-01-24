@@ -101,12 +101,13 @@ keys['ctrl+g'] = textadept.editing.goto_line
 
 -- Tools.
 local m_tools = textadept.menu.menubar[_L['Tools']]
-keys[translate('alt+c')] = m_tools[_L['Command Entry']][2]
+keys[translate('alt+c')] = ui.command_entry.run
 keys['ctrl+c'] = m_tools[_L['Select Command']][2]
 -- TODO: textadept.run.run
 -- TODO: textadept.run.compile
--- TODO: m_tools[_L['Set Arguments...']][2]
+-- TODO: textadept.run.set_arguments
 -- TODO: textadept.run.build
+-- TODO: textadept.run.test
 -- TODO: textadept.run.stop
 -- TODO: m_tools[_L['Next Error']][2]
 -- TODO: m_tools[_L['Previous Error']][2]
@@ -128,7 +129,7 @@ keys[translate('alt+r')] = io.quick_open
 -- Snippets.
 keys['\t'] = function()
   if buffer:auto_c_active() then return end -- ignore
-  if textadept.snippets._insert() ~= false then return true end
+  if textadept.snippets.insert() ~= false then return true end
   if buffer.selection_empty then
     if textadept.editing.autocomplete('word') == true then return true end
     local line, pos = buffer:get_cur_line()
@@ -138,10 +139,10 @@ keys['\t'] = function()
 end
 keys['shift+\t'] = function()
   if buffer:auto_c_active() then buffer:line_up() return end -- scroll
-  return textadept.snippets._previous()
+  return textadept.snippets.previous()
 end
-keys.esc = textadept.snippets._cancel_current
--- TODO: textadept.snippets._select
+keys.esc = textadept.snippets.cancel_current
+-- TODO: textadept.snippets.select
 -- TODO: m_snippets[_L['Complete Trigger Word']][2]
 -- Other.
 -- m_tools[_L['Complete Symbol']][2] is '\t'
