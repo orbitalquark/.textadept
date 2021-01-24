@@ -46,6 +46,17 @@ textadept.run.build_commands[_HOME] = function()
   }
   if button == 1 then return 'make -C src '..target end
 end
+local prev_tests
+textadept.run.test_commands[_HOME] = function()
+  local button, tests = ui.dialogs.inputbox{
+    title = _L['Run tests']:gsub('_', ''),
+    informative_text = 'Comma-separated tests to run:',
+    text = prev_tests or '-locale,-interactive'
+  }
+  if button ~= 1 then return end
+  prev_tests = tests
+  return 'ta -n -f -t ' .. tests
+end
 
 -- Filter for ~/.textadept.
 io.quick_open_filters[_USERHOME] = {
@@ -462,3 +473,5 @@ events.connect(events.LEXER_LOADED, function(name)
 end)
 -- Lua REPL.
 require('lua_repl')
+
+textadept.run.test_commands['/home/mitchell/code/scintillua'] = 'lua tests.lua'
