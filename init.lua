@@ -184,14 +184,25 @@ m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
   require('debugger.lua')
   local args = {'-n -f'}
   if button == 1 then
-    args[#args + 1] = [[-e '_=require("debugger.lua")']] -- update package.cpath
-    args[#args + 1] = [[-e '_=require("debugger.lua.mobdebug").coro()']]
-    args[#args + 1] = [[-e '_=require("debugger.lua.mobdebug").start()']]
+    args[#args + 1] = string.format(
+      [[-e 'package.path="%s/modules/debugger/lua/?.lua;%s"']], _HOME,
+      package.path)
+    local so = not WIN32 and 'so' or 'dll'
+    args[#args + 1] = string.format(
+      [[-e 'package.cpath="%s/modules/debugger/lua/?.%s;%s"']], _HOME, so,
+      package.cpath)
+    args[#args + 1] = [[-e '_=require("mobdebug").coro()']]
+    args[#args + 1] = [[-e '_=require("mobdebug").start()']]
   end
+  if not WIN32 then
   debugger.start(
     'ansi_c', '/home/mitchell/code/textadept/textadept',
     table.concat(args, ' '))
   debugger.continue('ansi_c')
+  else
+    args[1] = arg[0] .. ' ' .. args[1]
+    os.spawn((table.concat(args, ' '):gsub('\\', '\\\\')))
+  end
   if button ~= 1 then return end
   timeout(0.1, function()
     if debugger.start('lua', '-') then debugger.continue('lua') end
