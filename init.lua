@@ -46,7 +46,8 @@ io.quick_open_filters[_HOME] = {
 ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
 textadept.run.build_commands[_HOME] = function()
   local button, target = ui.dialogs.standard_inputbox{
-    title = _L['Command'], informative_text = 'make -C src'
+    title = _L['Command'], informative_text = 'make -C src',
+    text = 'DEBUG=1 -j4'
   }
   if button == 1 then return 'make -C src '..target end
 end
