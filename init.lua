@@ -8,8 +8,8 @@ end
 view.h_scroll_bar, view.v_scroll_bar = false, false
 view.caret_period = 0
 if not CURSES then
-view.caret_style = view.CARETSTYLE_BLOCK | view.CARETSTYLE_OVERSTRIKE_BLOCK |
-  view.CARETSTYLE_BLOCK_AFTER
+  view.caret_style = view.CARETSTYLE_BLOCK | view.CARETSTYLE_OVERSTRIKE_BLOCK |
+    view.CARETSTYLE_BLOCK_AFTER
 else
   view.caret_style = view.caret_style | view.CARETSTYLE_BLOCK_AFTER
 end
