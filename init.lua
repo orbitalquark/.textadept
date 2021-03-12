@@ -173,18 +173,20 @@ require('lsp')
 
 -- Debugger module.
 local debugger = require('debugger')
--- Add an extra debug menu entry for debugging Textadept.
-local m_debug = textadept.menu.menubar[_L['Debug']]
-if m_debug[#m_debug][1] ~= '' then m_debug[#m_debug + 1] = {''} end
-m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
-  local button = ui.dialogs.yesno_msgbox{
-    title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'
+
+-- Settings for Textadept development.
+local debug_args = '-n -f'
+debugger.project_commands[_HOME] = function()
+  if CURSES then return end -- not possible
+  local button, args = ui.dialogs.inputbox{
+    title = 'Arguments', informative_text = 'Arguments:', text = debug_args
   }
-  if button == -1 then return end
-  require('debugger.ansi_c').logging = true
-  require('debugger.lua')
-  local args = {'-n -f'}
-  if button == 1 then
+  if button ~= 1 then return end
+  args, debug_args = {args}, args
+  local debug_lua = WIN32 or ui.dialogs.yesno_msgbox{
+    title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'
+  } == 1
+  if debug_lua then
     args[#args + 1] = string.format(
       [[-e 'package.path="%s/modules/debugger/lua/?.lua;%s"']], _HOME,
       package.path)
@@ -194,21 +196,21 @@ m_debug[#m_debug + 1] = {'Debug Text_adept...', function()
       package.cpath)
     args[#args + 1] = [[-e '_=require("mobdebug").coro()']]
     args[#args + 1] = [[-e '_=require("mobdebug").start()']]
+    timeout(0.1, function()
+      require('debugger.lua') -- load events
+      if debugger.start('lua', '-') then debugger.continue('lua') end
+    end)
   end
   if not WIN32 then
-  debugger.start(
-    'ansi_c', '/home/mitchell/code/textadept/textadept',
-    table.concat(args, ' '))
-  debugger.continue('ansi_c')
+    require('debugger.ansi_c').logging = true
+    return 'ansi_c', '/home/mitchell/code/textadept/textadept',
+      table.concat(args, ' ')
   else
     args[1] = arg[0] .. ' ' .. args[1]
     os.spawn((table.concat(args, ' '):gsub('\\', '\\\\')))
+    return nil -- cannot run gdb, so just run and debug Lua
   end
-  if button ~= 1 then return end
-  timeout(0.1, function()
-    if debugger.start('lua', '-') then debugger.continue('lua') end
-  end)
-end}
+end
 
 -- Add option for toggling menubar visibility.
 local menubar_visible = false -- will be hidden on init
