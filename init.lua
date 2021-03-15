@@ -188,21 +188,21 @@ debugger.project_commands[_HOME] = function()
   } == 1
   if debug_lua then
     args[#args + 1] = string.format(
-      [[-e 'package.path="%s/modules/debugger/lua/?.lua;%s"']], _HOME,
+      [[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
       package.path)
     local so = not WIN32 and 'so' or 'dll'
     args[#args + 1] = string.format(
-      [[-e 'package.cpath="%s/modules/debugger/lua/?.%s;%s"']], _HOME, so,
+      [[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME, so,
       package.cpath)
-    args[#args + 1] = [[-e '_=require("mobdebug").coro()']]
-    args[#args + 1] = [[-e '_=require("mobdebug").start()']]
+    args[#args + 1] = [[-e "_=require('mobdebug').coro()"]]
+    args[#args + 1] = [[-e "_=require('mobdebug').start()"]]
     timeout(0.1, function()
       require('debugger.lua') -- load events
       if debugger.start('lua', '-') then debugger.continue('lua') end
     end)
   end
   if not WIN32 then
-    require('debugger.ansi_c').logging = true
+    require('debugger.gdb').logging = true
     return 'ansi_c', '/home/mitchell/code/textadept/textadept',
       table.concat(args, ' ')
   else
