@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuvw yz~\]^_
--- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_~~~~~~%^&*()-    {}\         / \b~
+-- a:  aA   C  eE      iI JkKlL     O  qQ R StT   V  xXyYzZ_~~~~~~%^&*()-    {}\         / \b~
 
 local keys = keys
 local function translate(key)
@@ -413,6 +413,7 @@ end)
 --keys[not CURSES and 'alt+=' or 'meta+='] = M.inspect
 --keys[not CURSES and 'alt++' or 'meta++'] = m_debug[_L['Evaluate...']][2]
 --keys.f9 = debugger.toggle_breakpoint
+keys[translate('alt+j')] = require('fmt').reformat
 
 -- Other.
 -- if OSX or CURSES then
