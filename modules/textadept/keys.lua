@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuvw yz~\]^_
--- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_`~~~~~%^&*()-  []{}\         / \b~
+-- a:  aA   C  eE      iIjJkKlL     O  qQ R StT   V  xXyYzZ_~~~~~~%^&*()-    {}\         / \b~
 
 local keys = keys
 local function translate(key)
@@ -366,6 +366,8 @@ for key, v in pairs{[next_key] = true, [prev_key] = false} do
 end
 keys[translate('alt+<')] = function() view:line_scroll(-20, 0) end
 keys[translate('alt+>')] = function() view:line_scroll(20, 0) end
+keys[translate('alt+[')] = function() view:goto_buffer(-1) end
+keys[translate('alt+]')] = function() view:goto_buffer(1) end
 keys['ctrl+alt+l'] = function()
   if #_VIEWS == 1 then return end
   view.size = ui.size[ui.get_split_table().vertical and 1 or 2] // 2
