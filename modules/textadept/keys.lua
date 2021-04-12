@@ -424,6 +424,27 @@ end)
   -- end
 -- end
 
+-- Language-specific keys.
+
+-- Toggles between C/C++ source and header files.
+local function toggle_c_header_impl()
+  local filename_noext, ext =
+    buffer.filename:match('^(.+%.)([hc][px]?[px]?)$')
+  if not ext then return end
+  local exts
+  if ext:find('^h') then
+    exts = ext == 'h' and {'c', 'cpp', 'cxx'} or {(ext:gsub('^h', 'c'))}
+  elseif ext:find('^c') then
+    exts = {ext:gsub('^c', 'h'), 'h'}
+  end
+  for _, ext in ipairs(exts) do
+    local filename = filename_noext .. ext
+    if lfs.attributes(filename) then io.open_file(filename) return end
+  end
+end
+keys.ansi_c[translate('alt+\\')] = toggle_c_header_impl
+keys.cpp[translate('alt+\\')] = toggle_c_header_impl
+
 -- Keys for the command entry.
 local ekeys = ui.command_entry.editing_keys.__index
 ekeys['ctrl+f'] = function() ui.command_entry:char_right() end
