@@ -1,7 +1,7 @@
 -- Copyright 2007-2020 Mitchell. See LICENSE.
 
 if not CURSES then
-  view:set_theme(LINUX and 'dark' or 'light', {font = 'DejaVu Sans Mono', size = 13})
+  view:set_theme(LINUX and 'dark' or 'light', {font = 'Ubuntu', size = 13})
 end
 
 view.h_scroll_bar, view.v_scroll_bar = false, false
@@ -12,8 +12,8 @@ if not CURSES then
 else
   view.caret_style = view.caret_style | view.CARETSTYLE_BLOCK_AFTER
 end
-view.edge_mode = not CURSES and view.EDGE_LINE or view.EDGE_BACKGROUND
-view.edge_column = 80
+view.edge_column = 100
+if not CURSES then view.edge_color = lexer.colors.red end
 
 ui.tabs = false
 ui.find.highlight_all_matches = true
@@ -66,6 +66,15 @@ io.quick_open_filters[_USERHOME] = {
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', -- extensions
   '!/%.hg$' -- folders
 }
+
+-- Set up long line marker for certain projects.
+events.connect(events.LEXER_LOADED, function()
+  local root = io.get_project_root()
+  local mark_long_lines = root and
+    (root:find('/%.?textadept$') or root:find('/scintillua$') or root:find('/scinterm$') or
+      root:find('/gtdialog$'))
+  view.edge_mode = mark_long_lines and view.EDGE_BACKGROUND or view.EDGE_NONE
+end)
 
 -- Hide margins when writing e-mails and commit messages.
 events.connect(events.FILE_OPENED, function(filename)
