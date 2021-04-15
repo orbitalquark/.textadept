@@ -7,18 +7,18 @@
 -- Install this module by copying it into your *~/.textadept/modules/* directory or Textadept's
 -- *modules/* directory, and then putting the following in your *~/.textadept/init.lua*:
 --
---     require('fmt')
+--     require('format')
 --
 -- There will be an "Edit > Reformat" menu. You can also assign a keybinding:
 --
---     keys['ctrl+alt+j'] = require('fmt').paragraph
+--     keys['ctrl+alt+j'] = require('format').paragraph
 --
 -- @field fmt_line_length (number)
 --   The maximum number of characters to allow on a line when reformatting paragraphs. The
 --   default value is 100.
 -- @field on_save (bool)
 --   Whether or not to invoke a code formatter on save. The default value is `true`.
-module('fmt')]]
+module('format')]]
 local M = {}
 
 -- Localizations.
