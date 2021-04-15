@@ -138,7 +138,10 @@ keys['\t'] = function()
   return false
 end
 keys['shift+\t'] = function()
-  if buffer:auto_c_active() then buffer:line_up() return end -- scroll
+  if buffer:auto_c_active() then
+    buffer:line_up() -- scroll
+    return
+  end
   return textadept.snippets.previous()
 end
 keys.esc = textadept.snippets.cancel_current
@@ -194,10 +197,10 @@ if not CURSES then
 end
 
 -- Help.
---if not CURSES then
+-- if not CURSES then
 -- TODO: textadept.menu.menubar[_L['Help']][_L['Show Manual']][2]
 -- TODO: textadept.menu.menubar[_L['Help']][_L['Show LuaDoc']][2]
---end
+-- end
 
 -- Movement/selection commands.
 keys['ctrl+f'] = buffer.char_right
@@ -301,7 +304,7 @@ keys['ctrl+shift+right'] = buffer.word_right_extend
 keys.down, keys['shift+down'] = buffer.line_down, buffer.line_down_extend
 keys.up, keys['shift+up'] = buffer.line_up, buffer.line_up_extend
 keys.home, keys['shift+home'] = buffer.vc_home, buffer.vc_home_extend
-keys['end'], keys['shift+end']= buffer.line_end, buffer.line_end_extend
+keys['end'], keys['shift+end'] = buffer.line_end, buffer.line_end_extend
 keys.del, keys['\b'] = buffer.clear, buffer.delete_back
 
 -- Miscellaneous not in standard menu.
@@ -323,11 +326,13 @@ local function goto_char()
     end
   end
 end
-keys[translate('alt+g')] = setmetatable({}, {__index = function(_, k)
-  if #k > 1 then return end
-  char = k
-  return goto_char
-end})
+keys[translate('alt+g')] = setmetatable({}, {
+  __index = function(_, k)
+    if #k > 1 then return end
+    char = k
+    return goto_char
+  end
+})
 keys[translate('alt+G')] = goto_char
 keys['ctrl+o'] = function()
   buffer:line_end()
@@ -380,9 +385,8 @@ events.connect(events.LEXER_LOADED, function(lang)
     keys[lang]['\t'] = function()
       if buffer:auto_c_active() then return end -- ignore
       return buffer.selection_empty and
-             (textadept.snippets.insert() == nil or
-              textadept.editing.autocomplete(lang) == true or
-              textadept.editing.autocomplete('lsp') == true)
+        (textadept.snippets.insert() == nil or textadept.editing.autocomplete(lang) == true or
+          textadept.editing.autocomplete('lsp') == true)
     end
   end
   if not keys[lang][translate('alt+?')] then
@@ -395,42 +399,41 @@ events.connect(events.LEXER_LOADED, function(lang)
   end
 end)
 
---keys.f12 = ctags.goto_tag
---keys['shift+f12'] = m_ctags['G_oto Ctag...'][2]
---keys.f6 = file_diff.start
---keys['shift+f6'] = m_tools[_L['Compare Files']][_L['Compare Buffers']][2]
---keys['alt+down'] = m_tools[_L['Compare Files']][_L['Next Change']][2]
---keys['alt+up'] = m_tools[_L['Compare Files']][_L['Previous Change']][2]
---keys['alt+left'] = m_tools[_L['Compare Files']][_L['Merge Left']][2]
---keys['alt+right'] = m_tools[_L['Compare Files']][_L['Merge Right']][2]
---keys.f7 = m_tools[_L['Spelling']][_L['Check Spelling...']][2]
---keys['shift+f7'] = spellcheck.check_spelling
---keys.f5 = debugger.start
---keys.f10 = debugger.step_over
---keys.f11 = debugger.step_into
---keys['shift+f11'] = debugger.step_out
---keys['shift+f5'] = debugger.stop
---keys[not CURSES and 'alt+=' or 'meta+='] = M.inspect
---keys[not CURSES and 'alt++' or 'meta++'] = m_debug[_L['Evaluate...']][2]
---keys.f9 = debugger.toggle_breakpoint
-keys[translate('alt+j')] = require('fmt').reformat
+-- keys.f12 = ctags.goto_tag
+-- keys['shift+f12'] = m_ctags['G_oto Ctag...'][2]
+-- keys.f6 = file_diff.start
+-- keys['shift+f6'] = m_tools[_L['Compare Files']][_L['Compare Buffers']][2]
+-- keys['alt+down'] = m_tools[_L['Compare Files']][_L['Next Change']][2]
+-- keys['alt+up'] = m_tools[_L['Compare Files']][_L['Previous Change']][2]
+-- keys['alt+left'] = m_tools[_L['Compare Files']][_L['Merge Left']][2]
+-- keys['alt+right'] = m_tools[_L['Compare Files']][_L['Merge Right']][2]
+-- keys.f7 = m_tools[_L['Spelling']][_L['Check Spelling...']][2]
+-- keys['shift+f7'] = spellcheck.check_spelling
+-- keys.f5 = debugger.start
+-- keys.f10 = debugger.step_over
+-- keys.f11 = debugger.step_into
+-- keys['shift+f11'] = debugger.step_out
+-- keys['shift+f5'] = debugger.stop
+-- keys[not CURSES and 'alt+=' or 'meta+='] = M.inspect
+-- keys[not CURSES and 'alt++' or 'meta++'] = m_debug[_L['Evaluate...']][2]
+-- keys.f9 = debugger.toggle_breakpoint
+keys[translate('alt+j')] = require('format').paragraph
 
 -- Other.
 -- if OSX or CURSES then
-  -- UTF-8 input.
-  -- TODO: function()
-  --   ui.command_entry.run(function(code)
-  --     buffer:add_text(utf8.char(tonumber(code, 16)))
-  --   end)
-  -- end
+-- UTF-8 input.
+--   TODO: function()
+--     ui.command_entry.run(function(code)
+--       buffer:add_text(utf8.char(tonumber(code, 16)))
+--     end)
+--   end
 -- end
 
 -- Language-specific keys.
 
 -- Toggles between C/C++ source and header files.
 local function toggle_c_header_impl()
-  local filename_noext, ext =
-    buffer.filename:match('^(.+%.)([hc][px]?[px]?)$')
+  local filename_noext, ext = buffer.filename:match('^(.+%.)([hc][px]?[px]?)$')
   if not ext then return end
   local exts
   if ext:find('^h') then
@@ -440,7 +443,10 @@ local function toggle_c_header_impl()
   end
   for _, ext in ipairs(exts) do
     local filename = filename_noext .. ext
-    if lfs.attributes(filename) then io.open_file(filename) return end
+    if lfs.attributes(filename) then
+      io.open_file(filename)
+      return
+    end
   end
 end
 keys.ansi_c[translate('alt+\\')] = toggle_c_header_impl

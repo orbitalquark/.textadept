@@ -1,8 +1,7 @@
 -- Copyright 2007-2020 Mitchell. See LICENSE.
 
 if not CURSES then
-  view:set_theme(
-    LINUX and 'dark' or 'light', {font = 'DejaVu Sans Mono', size = 12})
+  view:set_theme(LINUX and 'dark' or 'light', {font = 'DejaVu Sans Mono', size = 13})
 end
 
 view.h_scroll_bar, view.v_scroll_bar = false, false
@@ -25,37 +24,36 @@ textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
 textadept.file_types.extensions.luadoc = 'lua'
 
--- Settings for Textadept development.
+-- Core settings for Textadept development.
+-- LuaFormatter off
 io.quick_open_filters[_HOME] = {
   -- Extensions to exclude.
-  '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx',
-  '!.orig', '!.rej',
+  '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx', '!.orig', '!.rej',
   -- Folders to exclude.
-  '!/%.hg$', '!/.git$',
+  '!/.hg$', '!/.git$',
   '!images',
   '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
   '!modules/spellcheck/hunspell',
   '!modules/yaml/libyaml', '!modules/yaml/lyaml',
   '!releases',
-  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt',
-  '!scintilla/scripts', '!scintilla/test', '!scintilla/win32',
+  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt', '!scintilla/scripts',
+  '!scintilla/test', '!scintilla/win32',
   '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
   -- Files to exclude.
   '!api$', '![^c]tags$'
 }
+-- LuaFormatter on
 ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
 textadept.run.build_commands[_HOME] = function()
   local button, target = ui.dialogs.standard_inputbox{
-    title = _L['Command'], informative_text = 'make -C src',
-    text = 'DEBUG=1 -j4'
+    title = _L['Command'], informative_text = 'make -C src', text = 'DEBUG=1 -j4'
   }
-  if button == 1 then return 'make -C src '..target end
+  if button == 1 then return 'make -C src ' .. target end
 end
 local prev_tests
 textadept.run.test_commands[_HOME] = function()
   local button, tests = ui.dialogs.inputbox{
-    title = _L['Run tests']:gsub('_', ''),
-    informative_text = 'Comma-separated tests to run:',
+    title = _L['Run tests']:gsub('_', ''), informative_text = 'Comma-separated tests to run:',
     text = prev_tests or '-locale,-interactive'
   }
   if button ~= 1 then return end
@@ -71,8 +69,7 @@ io.quick_open_filters[_USERHOME] = {
 
 -- Hide margins when writing e-mails and commit messages.
 events.connect(events.FILE_OPENED, function(filename)
-  if filename and
-     (filename:find('tmpmsg%-0x%x+') or filename:find('hg%-editor')) then
+  if filename and (filename:find('tmpmsg%-0x%x+') or filename:find('hg%-editor')) then
     for i = 1, view.margins do view.margin_width_n[i] = 0 end
     view.wrap_mode = view.WRAP_WHITESPACE
     view.edge_mode = view.EDGE_NONE
@@ -87,40 +84,45 @@ end)
 -- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['File']]
 table.insert(m_file, #m_file - 1, {''}) -- before Quit
-table.insert(m_file, #m_file - 1, {'VCS Diff', function()
-  local root = io.get_project_root()
-  if not buffer.filename or not root then return end
-  local diff
-  if lfs.attributes(root .. '/.hg') then
-    diff = os.spawn('hg diff "' .. buffer.filename .. '"', root):read('a')
-  elseif lfs.attributes(root .. '/.git') then
-    diff = os.spawn('git diff "' .. buffer.filename .. '"', root):read('a')
-  else
-    return
+table.insert(m_file, #m_file - 1, {
+  'VCS Diff', function()
+    local root = io.get_project_root()
+    if not buffer.filename or not root then return end
+    local diff
+    if lfs.attributes(root .. '/.hg') then
+      diff = os.spawn('hg diff "' .. buffer.filename .. '"', root):read('a')
+    elseif lfs.attributes(root .. '/.git') then
+      diff = os.spawn('git diff "' .. buffer.filename .. '"', root):read('a')
+    else
+      return
+    end
+    local buffer = buffer.new()
+    buffer:set_lexer('diff')
+    buffer:add_text(diff)
+    buffer:goto_pos(1)
+    buffer:set_save_point()
   end
-  local buffer = buffer.new()
-  buffer:set_lexer('diff')
-  buffer:add_text(diff)
-  buffer:goto_pos(1)
-  buffer:set_save_point()
-end})
+})
 
 -- Run shell commands at project root.
 local m_tools = textadept.menu.menubar[_L['Tools']]
-table.insert(m_tools, 8 --[[after Build]], {'Run Project Command', function()
-  local root = io.get_project_root()
-  if not root then return end
-  local button, command = ui.dialogs.standard_inputbox{
-    title = _L['Command'], informative_text = root
-  }
-  if button == 1 then os.spawn(command, root, ui.print, ui.print) end
-end})
+table.insert(m_tools, 8 --[[after Build]] , {
+  'Run Project Command', function()
+    local root = io.get_project_root()
+    if not root then return end
+    local button, command = ui.dialogs.standard_inputbox{
+      title = _L['Command'], informative_text = root
+    }
+    if button == 1 then os.spawn(command, root, ui.print, ui.print) end
+  end
+})
 
 -- Ctags module.
 local ctags = require('ctags')
 
--- Settings for Textadept development.
+-- Ctags settings for Textadept development.
 local ta_tags = {_HOME .. '/modules/lua/ta_tags'}
+-- LuaFormatter off
 local extra_tags = {
   _HOME .. '/modules/ctags/tags',
   _HOME .. '/modules/debugger/tags',
@@ -131,14 +133,14 @@ local extra_tags = {
   _HOME .. '/modules/open_file_mode/tags',
   _HOME .. '/modules/spellcheck/tags'
 }
+-- LuaFormatter on
 for _, tags in ipairs(extra_tags) do ta_tags[#ta_tags + 1] = tags end
 ctags[_HOME] = ta_tags
 ctags[_HOME .. '/src/scintilla'] = _HOME .. '/tags'
 ctags[_USERHOME] = ta_tags
 ctags.ctags_flags[_HOME] = table.concat({
-  '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c',
-  'src/scintilla/curses', 'src/scintilla/gtk', 'src/scintilla/include',
-  'src/scintilla/lexlib', 'src/scintilla/src',
+  '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c', 'src/scintilla/curses', 'src/scintilla/gtk',
+  'src/scintilla/include', 'src/scintilla/lexlib', 'src/scintilla/src',
   'src/scintilla/lexers/LexLPeg.cxx'
 }, ' ')
 ctags.api_commands[_HOME] = function()
@@ -159,8 +161,7 @@ events.connect(events.LEXER_LOADED, function(name)
 end)
 table.insert(textadept.editing.api_files.ansi_c, ta_api)
 table.insert(textadept.editing.api_files.cpp, ta_api)
-table.insert(
-  textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/lua_api')
+table.insert(textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/lua_api')
 
 -- Spellcheck module.
 require('spellcheck')
@@ -174,7 +175,7 @@ require('lsp')
 -- Debugger module.
 local debugger = require('debugger')
 
--- Settings for Textadept development.
+-- Debugger settings for Textadept development.
 local debug_args = '-n -f'
 debugger.project_commands[_HOME] = function()
   if CURSES then return end -- not possible
@@ -183,17 +184,15 @@ debugger.project_commands[_HOME] = function()
   }
   if button ~= 1 then return end
   args, debug_args = {args}, args
-  local debug_lua = WIN32 or ui.dialogs.yesno_msgbox{
-    title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'
-  } == 1
+  local debug_lua = WIN32 or
+    (ui.dialogs.yesno_msgbox{title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'} ==
+      1)
   if debug_lua then
-    args[#args + 1] = string.format(
-      [[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
+    args[#args + 1] = string.format([[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
       package.path)
     local so = not WIN32 and 'so' or 'dll'
-    args[#args + 1] = string.format(
-      [[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME, so,
-      package.cpath)
+    args[#args + 1] = string.format([[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME,
+      so, package.cpath)
     args[#args + 1] = [[-e "_=require('mobdebug').coro()"]]
     args[#args + 1] = [[-e "_=require('mobdebug').start()"]]
     timeout(0.1, function()
@@ -203,8 +202,7 @@ debugger.project_commands[_HOME] = function()
   end
   if not WIN32 then
     require('debugger.gdb').logging = true
-    return 'ansi_c', '/home/mitchell/code/textadept/textadept',
-      table.concat(args, ' ')
+    return 'ansi_c', '/home/mitchell/code/textadept/textadept', table.concat(args, ' ')
   else
     args[1] = arg[0] .. ' ' .. args[1]
     os.spawn((table.concat(args, ' '):gsub('\\', '\\\\')))
@@ -216,10 +214,12 @@ end
 local menubar_visible = false -- will be hidden on init
 local m_view = textadept.menu.menubar[_L['View']]
 m_view[#m_view + 1] = {''}
-m_view[#m_view + 1] = {'Toggle _Menubar', function()
-  menubar_visible = not menubar_visible
-  textadept.menu.menubar = menubar_visible and textadept.menu.menubar or nil
-end}
+m_view[#m_view + 1] = {
+  'Toggle _Menubar', function()
+    menubar_visible = not menubar_visible
+    textadept.menu.menubar = menubar_visible and textadept.menu.menubar or nil
+  end
+}
 
 events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
 
@@ -227,16 +227,12 @@ events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
 
 -- Indent on 'Enter' when between auto-paired '{}' for C and C++.
 events.connect(events.CHAR_ADDED, function(ch)
-  if (buffer:get_lexer() ~= 'ansi_c' and buffer:get_lexer() ~= 'cpp') or
-     ch ~= 10 or not textadept.editing.auto_indent then
-    return
-  end
+  if (buffer:get_lexer() ~= 'ansi_c' and buffer:get_lexer() ~= 'cpp') or ch ~= 10 or
+    not textadept.editing.auto_indent then return end
   local line = buffer:line_from_position(buffer.current_pos)
-  if buffer:get_line(line - 1):find('{%s+$') and
-     buffer:get_line(line):find('^%s*}') then
+  if buffer:get_line(line - 1):find('{%s+$') and buffer:get_line(line):find('^%s*}') then
     buffer:new_line()
-    buffer.line_indentation[line] = buffer.line_indentation[line - 1] +
-                                    buffer.tab_width
+    buffer.line_indentation[line] = buffer.line_indentation[line - 1] + buffer.tab_width
     buffer:goto_pos(buffer.line_indent_position[line])
   end
 end)
@@ -396,8 +392,7 @@ snip.afunc = 'function(%1(args))\n\t%0\nend'
 snip.lfunc = 'local function %1(name)(%2(args))\n\t%0\nend'
 snip.loc = 'local %1(name) = %2(value)'
 snip.open = "local %1(f) = io.open(%2(file), '%3(r)')\n%0\n%1:close()"
-snip.openif = "local %1(f) = io.open(%2(file), '%3(r)')\n" ..
-  "if %1 then\n\t%0\n\t%1:close()\nend"
+snip.openif = "local %1(f) = io.open(%2(file), '%3(r)')\nif %1 then\n\t%0\n\t%1:close()\nend"
 snip.popen = "local %1(p) = io.popen(%2(cmd))\n%0\n%1:close()"
 -- Textadept.
 snip.ta = 'textadept'
@@ -441,9 +436,7 @@ events.connect(events.LEXER_LOADED, function(name)
   if name ~= 'lua' or loaded then return end
   -- Love framework autocompletion and documentation.
   _M.lua.tags[#_M.lua.tags + 1] = _USERHOME .. '/modules/lua/love_0.9.2f_tags'
-  table.insert(
-    textadept.editing.api_files.lua,
-    _USERHOME .. '/modules/lua/love_0.9.2f_api')
+  table.insert(textadept.editing.api_files.lua, _USERHOME .. '/modules/lua/love_0.9.2f_api')
   _M.lua.expr_types['^love%.audio%.newSource%('] = 'Source'
   _M.lua.expr_types['^love%.filesystem%.newFile%('] = 'File'
   _M.lua.expr_types['^love%.graphics%.newCanvas%('] = 'Canvas'
