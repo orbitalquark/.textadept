@@ -1,19 +1,10 @@
 -- Copyright 2007-2020 Mitchell. See LICENSE.
 
 if not CURSES then
-  view:set_theme(LINUX and 'dark' or 'light', {font = 'Ubuntu', size = 13})
+  view:set_theme('light', {font = 'Ubuntu', size = 13})
 end
 
 view.h_scroll_bar, view.v_scroll_bar = false, false
-view.caret_period = 0
-if not CURSES then
-  view.caret_style = view.CARETSTYLE_BLOCK | view.CARETSTYLE_OVERSTRIKE_BLOCK |
-    view.CARETSTYLE_BLOCK_AFTER
-else
-  view.caret_style = view.caret_style | view.CARETSTYLE_BLOCK_AFTER
-end
-view.edge_column = 100
-if not CURSES then view.edge_color = lexer.colors.red end
 
 ui.tabs = false
 ui.find.highlight_all_matches = true
@@ -22,15 +13,19 @@ textadept.editing.auto_pairs[string.byte('`')] = '`'
 textadept.editing.typeover_chars[string.byte('`')] = true
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
+-- Always strip trailing spaces, except in patch files.
+events.connect(events.LEXER_LOADED, function(name)
+  textadept.editing.strip_trailing_spaces = name ~= 'diff'
+end)
 textadept.file_types.extensions.luadoc = 'lua'
 
 -- Core settings for Textadept development.
 -- LuaFormatter off
-io.quick_open_filters[_HOME] = {
+local ta_filter = {
   -- Extensions to exclude.
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx', '!.orig', '!.rej',
   -- Folders to exclude.
-  '!/.hg$', '!/.git$',
+  '!/.hg$', '!/.git$', '!/.cache',
   '!images',
   '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
   '!modules/spellcheck/hunspell',
@@ -38,18 +33,24 @@ io.quick_open_filters[_HOME] = {
   '!releases',
   '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt', '!scintilla/scripts',
   '!scintilla/test', '!scintilla/win32',
+  '!lexilla/access', '!lexilla/bin', '!lexilla/doc', '!lexilla/examples', '!lexilla/lexers',
+  '!lexilla/scripts', '!lexilla/src', '!lexilla/test',
   '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
   -- Files to exclude.
   '!api$', '![^c]tags$'
 }
 -- LuaFormatter on
-ui.find.find_in_files_filters[_HOME] = io.quick_open_filters[_HOME]
-textadept.run.build_commands[_HOME] = function()
+io.quick_open_filters[_HOME] = ta_filter
+ui.find.find_in_files_filters[_HOME] = ta_filter
+local function ta_build()
   local button, target = ui.dialogs.standard_inputbox{
     title = _L['Command'], informative_text = 'make -C src', text = 'DEBUG=1 -j4'
   }
-  if button == 1 then return 'make -C src ' .. target end
+  if button == 1 then return 'make -C src ' .. target, _HOME end
 end
+textadept.run.build_commands[_HOME] = ta_build
+textadept.run.build_commands[_HOME .. '/src/scintilla'] = ta_build
+textadept.run.build_commands[_HOME .. '/src/scintilla/curses'] = ta_build
 local prev_tests
 textadept.run.test_commands[_HOME] = function()
   local button, tests = ui.dialogs.inputbox{
@@ -60,35 +61,7 @@ textadept.run.test_commands[_HOME] = function()
   prev_tests = tests
   return 'ta -n -f -t ' .. tests
 end
-
--- Filter for ~/.textadept.
-io.quick_open_filters[_USERHOME] = {
-  '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', -- extensions
-  '!/%.hg$' -- folders
-}
-
--- Set up long line marker for certain projects.
-events.connect(events.LEXER_LOADED, function()
-  local root = io.get_project_root()
-  local mark_long_lines = root and
-    (root:find('/%.?textadept$') or root:find('/scintillua$') or root:find('/scinterm$') or
-      root:find('/gtdialog$'))
-  view.edge_mode = mark_long_lines and view.EDGE_BACKGROUND or view.EDGE_NONE
-end)
-
--- Hide margins when writing e-mails and commit messages.
-events.connect(events.FILE_OPENED, function(filename)
-  if filename and (filename:find('tmpmsg%-0x%x+') or filename:find('hg%-editor')) then
-    for i = 1, view.margins do view.margin_width_n[i] = 0 end
-    view.wrap_mode = view.WRAP_WHITESPACE
-    view.edge_mode = view.EDGE_NONE
-  end
-end)
-
--- Always strip trailing spaces, except in patch files.
-events.connect(events.LEXER_LOADED, function(name)
-  textadept.editing.strip_trailing_spaces = name ~= 'diff'
-end)
+-- table.insert(textadept.run.error_patterns.lua, '^%s*(.-):(%d+): (.+)$')
 
 -- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['File']]
@@ -131,33 +104,27 @@ local ctags = require('ctags')
 
 -- Ctags settings for Textadept development.
 local ta_tags = {_HOME .. '/modules/lua/ta_tags'}
--- LuaFormatter off
-local extra_tags = {
-  _HOME .. '/modules/ctags/tags',
-  _HOME .. '/modules/debugger/tags',
-  _HOME .. '/modules/export/tags',
-  _HOME .. '/modules/file_diff/tags',
-  _HOME .. '/modules/lsp/tags',
-  _HOME .. '/modules/lua_repl/tags',
-  _HOME .. '/modules/open_file_mode/tags',
-  _HOME .. '/modules/spellcheck/tags'
+local extra_tags = {}
+local extra_modules = {
+  'ctags', 'debugger', 'export', 'file_diff', 'format', 'lsp', 'lua_repl', 'open_file_mode',
+  'spellcheck'
 }
--- LuaFormatter on
+for _, name in ipairs(extra_modules) do
+  extra_tags[#extra_tags + 1] = string.format('%s/modules/%s/tags', _HOME, name)
+end
 for _, tags in ipairs(extra_tags) do ta_tags[#ta_tags + 1] = tags end
 ctags[_HOME] = ta_tags
 ctags[_HOME .. '/src/scintilla'] = _HOME .. '/tags'
+ctags[_HOME .. '/src/scintilla/curses'] = _HOME .. '/tags'
 ctags[_USERHOME] = ta_tags
 ctags.ctags_flags[_HOME] = table.concat({
   '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c', 'src/scintilla/curses', 'src/scintilla/gtk',
-  'src/scintilla/include', 'src/scintilla/lexlib', 'src/scintilla/src',
-  'src/scintilla/lexers/LexLPeg.cxx'
+  'src/scintilla/include', 'src/scintilla/src', 'src/scintilla/lexers/LexLPeg.cxx',
+  'src/lexilla/include', 'src/lexilla/lexlib'
 }, ' ')
 ctags.api_commands[_HOME] = function()
-  os.spawn('make -C ' .. _HOME .. '/src luadoc'):wait()
+  os.spawn(string.format('make -C %s/src luadoc', _HOME)):wait()
   return nil -- keep default behavior
-end
-local function ta_api()
-  return (buffer.filename or ''):find(_HOME) and _HOME .. '/api' or nil
 end
 -- Load tags and api for external modules.
 events.connect(events.LEXER_LOADED, function(name)
@@ -168,6 +135,10 @@ events.connect(events.LEXER_LOADED, function(name)
   end
   _M.lua._extras = true
 end)
+-- Load api for C/C++ files in _HOME.
+local function ta_api()
+  return (buffer.filename or ''):find(_HOME) and _HOME .. '/api' or nil
+end
 table.insert(textadept.editing.api_files.ansi_c, ta_api)
 table.insert(textadept.editing.api_files.cpp, ta_api)
 table.insert(textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/lua_api')
@@ -218,6 +189,12 @@ debugger.project_commands[_HOME] = function()
     return nil -- cannot run gdb, so just run and debug Lua
   end
 end
+
+-- Format module.
+local format = require('format')
+
+-- Format settings for Textadept development.
+table.insert(format.ignore_file_patterns, '/src/scintilla/[^c][^u]') -- all scintilla except curses/
 
 -- Add option for toggling menubar visibility.
 local menubar_visible = false -- will be hidden on init
@@ -494,4 +471,5 @@ end)
 -- Lua REPL.
 require('lua_repl')
 
+-- Settings for Scintillua development.
 textadept.run.test_commands['/home/mitchell/code/scintillua'] = 'lua tests.lua'
