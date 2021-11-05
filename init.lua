@@ -9,8 +9,6 @@ view.h_scroll_bar, view.v_scroll_bar = false, false
 ui.tabs = false
 ui.find.highlight_all_matches = true
 
-textadept.editing.auto_pairs[string.byte('`')] = '`'
-textadept.editing.typeover_chars[string.byte('`')] = true
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
 -- Always strip trailing spaces, except in patch files.
