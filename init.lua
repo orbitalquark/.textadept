@@ -49,14 +49,14 @@ end
 textadept.run.build_commands[_HOME] = ta_build
 textadept.run.build_commands[_HOME .. '/src/scintilla'] = ta_build
 textadept.run.build_commands[_HOME .. '/src/scintilla/curses'] = ta_build
-local prev_tests
+local tests = '-locale,-interactive'
 textadept.run.test_commands[_HOME] = function()
-  local button, tests = ui.dialogs.inputbox{
+  local button
+  button, tests = ui.dialogs.inputbox{
     title = _L['Run tests']:gsub('_', ''), informative_text = 'Comma-separated tests to run:',
-    text = prev_tests or '-locale,-interactive'
+    text = tests
   }
   if button ~= 1 then return end
-  prev_tests = tests
   return 'ta -n -f -t ' .. tests
 end
 -- table.insert(textadept.run.error_patterns.lua, '^%s*(.-):(%d+): (.+)$')
@@ -126,12 +126,12 @@ ctags.api_commands[_HOME] = function()
 end
 -- Load tags and api for external modules.
 events.connect(events.LEXER_LOADED, function(name)
-  if name ~= 'lua' or _M.lua._extras then return end
+  if name ~= 'lua' or _M.lua._loaded_extras then return end
   for _, tags in ipairs(extra_tags) do
     table.insert(_M.lua.tags, tags)
     table.insert(textadept.editing.api_files.lua, (tags:gsub('tags$', 'api')))
   end
-  _M.lua._extras = true
+  _M.lua._loaded_extras = true
 end)
 -- Load api for C/C++ files in _HOME.
 local function ta_api()
@@ -168,9 +168,8 @@ debugger.project_commands[_HOME] = function()
   if debug_lua then
     args[#args + 1] = string.format([[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
       package.path)
-    local so = not WIN32 and 'so' or 'dll'
     args[#args + 1] = string.format([[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME,
-      so, package.cpath)
+      not WIN32 and 'so' or 'dll', package.cpath)
     args[#args + 1] = [[-e "_=require('mobdebug').coro()"]]
     args[#args + 1] = [[-e "_=require('mobdebug').start()"]]
     timeout(0.1, function()
@@ -180,7 +179,7 @@ debugger.project_commands[_HOME] = function()
   end
   if not WIN32 then
     require('debugger.gdb').logging = true
-    return 'ansi_c', '/home/mitchell/code/textadept/textadept', table.concat(args, ' ')
+    return 'ansi_c', _HOME .. '/textadept', table.concat(args, ' ')
   else
     args[1] = arg[0] .. ' ' .. args[1]
     os.spawn((table.concat(args, ' '):gsub('\\', '\\\\')))
@@ -211,7 +210,7 @@ events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
 
 -- Indent on 'Enter' when between auto-paired '{}' for C and C++.
 events.connect(events.CHAR_ADDED, function(ch)
-  if (buffer:get_lexer() ~= 'ansi_c' and buffer:get_lexer() ~= 'cpp') or ch ~= 10 or
+  if (buffer:get_lexer() ~= 'ansi_c' and buffer:get_lexer() ~= 'cpp') or ch ~= string.byte('\n') or
     not textadept.editing.auto_indent then return end
   local line = buffer:line_from_position(buffer.current_pos)
   if buffer:get_line(line - 1):find('{%s+$') and buffer:get_line(line):find('^%s*}') then
