@@ -7,7 +7,7 @@ module('textadept.keys')]]
 
 -- c:         ~~   ~            ~ \ ^
 -- ca: a cdefg~~jk m o qrstuvw yz~\]^_
--- a:  aA   C  eE      iI JkKlL     O  qQ R StT   V  xXyYzZ_~~~~~~%^&*()-    {}\         / \b~
+-- a:  aA   C  eE      iI JkKlL     O  qQ R StT   V  xX YzZ_~~~~~~%^&*()-    {}\         / \b~
 
 local keys = keys
 local function translate(key)
@@ -43,6 +43,7 @@ keys['ctrl+k'] = function()
 end
 keys[translate('alt+k')] = buffer.copy
 keys['ctrl+y'] = textadept.editing.paste_reindent
+keys[translate('alt+y')] = buffer.paste
 keys[translate('alt+D')] = buffer.line_duplicate
 -- buffer.clear is 'del'
 -- TODO: m_edit[_L['Delete Word']][2]
