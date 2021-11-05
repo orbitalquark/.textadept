@@ -94,7 +94,7 @@ end
 -- Replace is ar when find pane is focused in GUI.
 -- Replace All is aa when find pane is focused in GUI.
 -- Find in Files is ai when find pane is focused in GUI.
-keys[not CURSES and 'alt+S' or 'meta+S'] = m_search[_L['Find in Files']][2]
+keys[translate('alt+S')] = m_search[_L['Find in Files']][2]
 -- TODO: m_search[_L['Goto Next File Found']][2]
 -- TODO: m_search[_L['Goto Previous File Found']][2]
 keys['ctrl+g'] = textadept.editing.goto_line
