@@ -11,7 +11,13 @@ module('textadept.keys')]]
 
 local keys = keys
 local function translate(key)
-  return not CURSES and key or key:gsub('alt%+', 'meta+')
+  if OSX then
+    return key:gsub('alt%+', 'cmd+')
+  elseif CURSES then
+    return key:gsub('alt%+', 'meta+')
+  else
+    return key
+  end
 end
 
 -- File.
@@ -114,11 +120,11 @@ keys['ctrl+c'] = m_tools[_L['Select Command']][2]
 -- TODO: m_tools[_L['Previous Error']][2]
 -- Bookmarks.
 local m_bookmark = m_tools[_L['Bookmarks']]
-keys["alt+'"] = textadept.bookmarks.toggle
+keys[translate("alt+'")] = textadept.bookmarks.toggle
 -- TODO: textadept.bookmarks.clear
 -- TODO: m_bookmark[_L['Next Bookmark']][2]
 -- TODO: m_bookmark[_L['Previous Bookmark']][2]
-keys['alt+"'] = textadept.bookmarks.goto_mark
+keys[translate('alt+"')] = textadept.bookmarks.goto_mark
 -- Macros.
 keys[translate('alt+:')] = textadept.macros.record
 keys[translate('alt+;')] = textadept.macros.play

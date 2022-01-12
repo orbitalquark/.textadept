@@ -204,7 +204,7 @@ m_view[#m_view + 1] = {
   end
 }
 
-events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end)
+if not OSX then events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end) end
 
 -- Language-specific settings.
 
