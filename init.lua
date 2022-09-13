@@ -8,6 +8,7 @@ view.h_scroll_bar, view.v_scroll_bar = false, false
 
 ui.tabs = false
 ui.find.highlight_all_matches = true
+ui.find.show_filenames_in_progressbar = false
 
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
@@ -15,51 +16,43 @@ textadept.editing.auto_enclose = true
 events.connect(events.LEXER_LOADED, function(name)
   textadept.editing.strip_trailing_spaces = name ~= 'diff'
 end)
-textadept.file_types.extensions.luadoc = 'lua'
+lexer.detect_extensions.luadoc = 'lua'
+
+-- Audio cue on build success or failure.
+events.connect(events.BUILD_OUTPUT, function(output)
+  local status = output:match('^> exit status: (%d+)')
+  if not status then return end
+  local wav = tonumber(status) == 0 and 'leveled_up2.wav' or 'sorry.wav'
+  os.spawn('mpv /home/mitchell/config/sounds/' .. wav)
+end)
 
 -- Core settings for Textadept development.
--- LuaFormatter off
 local ta_filter = {
   -- Extensions to exclude.
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx', '!.orig', '!.rej',
-  -- Folders to exclude.
-  '!/.hg$', '!/.git$', '!/.cache',
-  '!images',
-  '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs',
-  '!modules/spellcheck/hunspell',
-  '!modules/yaml/libyaml', '!modules/yaml/lyaml',
-  '!releases',
-  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt', '!scintilla/scripts',
-  '!scintilla/test', '!scintilla/win32',
-  '!lexilla/access', '!lexilla/bin', '!lexilla/doc', '!lexilla/examples', '!lexilla/lexers',
-  '!lexilla/scripts', '!lexilla/src', '!lexilla/test',
-  '!src/cdk', '!src/win32', '!src/gtkosx', '!src/termkey',
   -- Files to exclude.
-  '!api$', '![^c]tags$'
+  '!api$', '![^c]tags$',
+  -- Folders to exclude.
+  '!/.hg$', '!/.git$', '!/.cache', --
+  '!images', --
+  '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs', --
+  '!modules/spellcheck/hunspell', --
+  '!modules/yaml/libyaml', '!modules/yaml/lyaml', --
+  '!releases', --
+  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt', '!scintilla/scripts',
+  '!scintilla/test', '!scintilla/win32', --
+  '!lexilla/access', '!lexilla/bin', '!lexilla/doc', '!lexilla/examples', '!lexilla/lexers',
+  '!lexilla/scripts', '!lexilla/src', '!lexilla/test', --
+  '!src/cdk', '!src/win32', '!src/gtkosx', '!src/gtkwin', '!src/termkey', --
+  '!/etc', '!/lib', '!/share' -- Windows folders
 }
--- LuaFormatter on
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
-local function ta_build()
-  local button, target = ui.dialogs.standard_inputbox{
-    title = _L['Command'], informative_text = 'make -C src', text = 'DEBUG=1 -j4'
-  }
-  if button == 1 then return 'make -C src ' .. target, _HOME end
-end
+local function ta_build() return 'make DEBUG=1 GTK2=1 -j16', _HOME .. '/src' end
 textadept.run.build_commands[_HOME] = ta_build
 textadept.run.build_commands[_HOME .. '/src/scintilla'] = ta_build
 textadept.run.build_commands[_HOME .. '/src/scintilla/curses'] = ta_build
-local tests = '-locale,-interactive'
-textadept.run.test_commands[_HOME] = function()
-  local button
-  button, tests = ui.dialogs.inputbox{
-    title = _L['Run tests']:gsub('_', ''), informative_text = 'Comma-separated tests to run:',
-    text = tests
-  }
-  if button ~= 1 then return end
-  return 'ta -n -f -t ' .. tests
-end
--- table.insert(textadept.run.error_patterns.lua, '^%s*(.-):(%d+): (.+)$')
+textadept.run.test_commands[_HOME] = 'textadept -n -f -t -locale,-interactive'
 
 -- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['File']]
@@ -84,19 +77,6 @@ table.insert(m_file, #m_file - 1, {
   end
 })
 
--- Run shell commands at project root.
-local m_tools = textadept.menu.menubar[_L['Tools']]
-table.insert(m_tools, 8 --[[after Build]] , {
-  'Run Project Command', function()
-    local root = io.get_project_root()
-    if not root then return end
-    local button, command = ui.dialogs.standard_inputbox{
-      title = _L['Command'], informative_text = root
-    }
-    if button == 1 then os.spawn(command, root, ui.print, ui.print) end
-  end
-})
-
 -- Ctags module.
 local ctags = require('ctags')
 
@@ -117,7 +97,7 @@ ctags[_HOME .. '/src/scintilla/curses'] = _HOME .. '/tags'
 ctags[_USERHOME] = ta_tags
 ctags.ctags_flags[_HOME] = table.concat({
   '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c', 'src/scintilla/curses', 'src/scintilla/gtk',
-  'src/scintilla/include', 'src/scintilla/src', 'src/scintilla/lexers/LexLPeg.cxx',
+  'src/scintilla/include', 'src/scintilla/src', 'src/scintilla/lexers/Scintillua.cxx',
   'src/lexilla/include', 'src/lexilla/lexlib'
 }, ' ')
 ctags.api_commands[_HOME] = function()
@@ -134,11 +114,10 @@ events.connect(events.LEXER_LOADED, function(name)
   _M.lua._loaded_extras = true
 end)
 -- Load api for C/C++ files in _HOME.
-local function ta_api()
-  return (buffer.filename or ''):find(_HOME) and _HOME .. '/api' or nil
-end
+local function ta_api() return (buffer.filename or ''):find(_HOME) and _HOME .. '/api' or nil end
 table.insert(textadept.editing.api_files.ansi_c, ta_api)
 table.insert(textadept.editing.api_files.cpp, ta_api)
+table.insert(textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/api')
 table.insert(textadept.editing.api_files.cpp, _HOME .. '/modules/ansi_c/lua_api')
 
 -- Spellcheck module.
@@ -154,37 +133,37 @@ require('lsp')
 local debugger = require('debugger')
 
 -- Debugger settings for Textadept development.
-local debug_args = '-n -f'
-debugger.project_commands[_HOME] = function()
-  if CURSES then return end -- not possible
-  local button, args = ui.dialogs.inputbox{
-    title = 'Arguments', informative_text = 'Arguments:', text = debug_args
-  }
-  if button ~= 1 then return end
-  args, debug_args = {args}, args
+local debug_f = function(args)
   local debug_lua = WIN32 or
     (ui.dialogs.yesno_msgbox{title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'} ==
       1)
   if debug_lua then
+    args = {args}
     args[#args + 1] = string.format([[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
       package.path)
     args[#args + 1] = string.format([[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME,
       not WIN32 and 'so' or 'dll', package.cpath)
     args[#args + 1] = [[-e "_=require('mobdebug').coro()"]]
     args[#args + 1] = [[-e "_=require('mobdebug').start()"]]
-    timeout(0.1, function()
+    args = table.concat(args, ' ')
+    timeout(0.5, function()
       require('debugger.lua') -- load events
       if debugger.start('lua', '-') then debugger.continue('lua') end
     end)
   end
-  if not WIN32 then
-    require('debugger.gdb').logging = true
-    return 'ansi_c', _HOME .. '/textadept', table.concat(args, ' ')
-  else
-    args[1] = arg[0] .. ' ' .. args[1]
-    os.spawn((table.concat(args, ' '):gsub('\\', '\\\\')))
-    return nil -- cannot run gdb, so just run and debug Lua
+  if WIN32 then
+    -- Cannot run gdb, so just run and debug Lua
+    os.spawn(((arg[0] .. ' ' .. args):gsub('\\', '\\\\')))
+    return
   end
+  require('debugger.gdb').logging = true -- also loads events
+  print('textadept', args)
+  if debugger.start('ansi_c', _HOME .. '/textadept', args) then debugger.continue('ansi_c') end
+end
+debugger.project_commands[_HOME] = function()
+  if CURSES then return end -- not possible
+  ui.command_entry.run('Debug Textadept:', debug_f, 'bash', '-n -f')
+  -- Do not return anything, let debug_f invoke the debug start command(s).
 end
 
 -- Format module.
@@ -381,7 +360,6 @@ snip.popen = "local %1(p) = io.popen(%2(cmd))\n%0\n%1:close()"
 snip.ta = 'textadept'
 snip.tab = 'textadept.bookmarks'
 snip.tae = 'textadept.editing'
-snip.taft = 'textadept.file_types'
 snip.tam = 'textadept.menu'
 snip.tar = 'textadept.run'
 snip.tas = 'textadept.session'
@@ -414,57 +392,6 @@ snip.bts = 'buffer.target_start'
 snip.buf = 'buffer'
 snip.bwep = wrap('buffer:word_end_position')
 snip.bwsp = wrap('buffer:word_start_position')
-local loaded = false
-events.connect(events.LEXER_LOADED, function(name)
-  if name ~= 'lua' or loaded then return end
-  -- Love framework autocompletion and documentation.
-  _M.lua.tags[#_M.lua.tags + 1] = _USERHOME .. '/modules/lua/love_0.9.2f_tags'
-  table.insert(textadept.editing.api_files.lua, _USERHOME .. '/modules/lua/love_0.9.2f_api')
-  _M.lua.expr_types['^love%.audio%.newSource%('] = 'Source'
-  _M.lua.expr_types['^love%.filesystem%.newFile%('] = 'File'
-  _M.lua.expr_types['^love%.graphics%.newCanvas%('] = 'Canvas'
-  _M.lua.expr_types['^love%.graphics%.newFont%('] = 'Font'
-  _M.lua.expr_types['^love%.graphics%.newImageFont%('] = 'Font'
-  _M.lua.expr_types['^love%.graphics%.newMesh%('] = 'Mesh'
-  _M.lua.expr_types['^love%.graphics%.newImage%('] = 'Image'
-  _M.lua.expr_types['^love%.graphics%.newParticleSystem%('] = 'ParticleSystem'
-  _M.lua.expr_types['^love%.graphics%.newQuad%('] = 'Quad'
-  _M.lua.expr_types['^love%.graphics%.newShader%('] = 'Shader'
-  _M.lua.expr_types['^love%.graphics%.newSpriteBatch%('] = 'SpriteBatch'
-  _M.lua.expr_types['^love%.image%.newCompressedData%('] = 'CompressedData'
-  _M.lua.expr_types['^love%.image%.newImageData%('] = 'ImageData'
-  _M.lua.expr_types['^love%.joystick%.getJoysticks%('] = 'Joystick'
-  _M.lua.expr_types['^love%.math%.newRandomGenerator%('] = 'RandomGenerator'
-  _M.lua.expr_types['^love%.math%.newBezierCurve%('] = 'BezierCurve'
-  _M.lua.expr_types['^love%.mouse%.getSystemCursor%('] = 'Cursor'
-  _M.lua.expr_types['^love%.mouse%.newCursor%('] = 'Cursor'
-  _M.lua.expr_types['^love%.physics%.newBody%('] = 'Body'
-  _M.lua.expr_types['^love%.physics%.newChainShape%('] = 'ChainShape'
-  _M.lua.expr_types['^love%.physics%.newCircleShape%('] = 'CircleShape'
-  _M.lua.expr_types['^love%.physics%.newEdgeShape%('] = 'EdgeShape'
-  _M.lua.expr_types['^love%.physics%.newDistanceJoint%('] = 'DistanceJoint'
-  _M.lua.expr_types['^love%.physics%.newFixture%('] = 'Fixture'
-  _M.lua.expr_types['^love%.physics%.newFrictionJoint%('] = 'FrictionJoint'
-  _M.lua.expr_types['^love%.physics%.newGearJoint%('] = 'GearJoint'
-  _M.lua.expr_types['^love%.physics%.newMouseJoint%('] = 'MouseJoint'
-  _M.lua.expr_types['^love%.physics%.newPolygonShape%('] = 'PolygonShape'
-  _M.lua.expr_types['^love%.physics%.newRectangleShape%('] = 'PolygonShape'
-  _M.lua.expr_types['^love%.physics%.newPrismaticJoint%('] = 'PrismaticJoint'
-  _M.lua.expr_types['^love%.physics%.newPulleyJoint%('] = 'PulleyJoint'
-  _M.lua.expr_types['^love%.physics%.newRevoluteJoint%('] = 'RevoluteJoint'
-  _M.lua.expr_types['^love%.physics%.newRopeJoint%('] = 'RopeJoint'
-  _M.lua.expr_types['^love%.physics%.newChainShape%('] = 'Shape'
-  _M.lua.expr_types['^love%.physics%.newEdgeShape%('] = 'Shape'
-  _M.lua.expr_types['^love%.physics%.newPolygonShape%('] = 'Shape'
-  _M.lua.expr_types['^love%.physics%.newRectangleShape%('] = 'Shape'
-  _M.lua.expr_types['^love%.physics%.newWeldJoint%('] = 'WeldJoint'
-  _M.lua.expr_types['^love%.physics%.newWorld%('] = 'World'
-  _M.lua.expr_types['^love%.sound%.newSoundData%('] = 'SoundData'
-  _M.lua.expr_types['^love%.thread%.newThread%('] = 'Thread'
-  _M.lua.expr_types['^love%.thread%.getChannel%('] = 'Channel'
-  _M.lua.expr_types['^love%.thread%.newChannel%('] = 'Channel'
-  loaded = true
-end)
 -- Lua REPL.
 require('lua_repl')
 

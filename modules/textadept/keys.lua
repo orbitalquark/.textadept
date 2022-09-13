@@ -182,7 +182,7 @@ local m_indentation = m_buffer[_L['Indentation']]
 -- TODO: m_buffer[_L['Encoding']][_L['UTF-16 Encoding']][2]
 -- TODO: m_buffer[_L['Toggle Wrap Mode']][2]
 -- TODO: m_buffer[_L['Toggle View Whitespace']][2]
--- TODO: textadept.file_types.select_lexer
+-- TODO: m_buffer[_L['Select Lexer']][2]
 
 -- Views.
 local m_view = textadept.menu.menubar[_L['View']]
@@ -367,7 +367,7 @@ for key, v in pairs{[next_key] = true, [prev_key] = false} do
         ui.find.goto_file_found(nil, v)
         if view == _VIEWS[i] then ui.goto_view(orig_view) end -- nothing found
         return
-      elseif buffer_type == _L['[Message Buffer]'] then
+      elseif buffer_type == _L['[Output Buffer]'] then
         textadept.run.goto_error(nil, v)
         if view == _VIEWS[i] then ui.goto_view(orig_view) end -- nothing found
         return
@@ -480,5 +480,6 @@ ekeys['ctrl+k'] = function()
   ui.command_entry:line_end_extend()
   ui.command_entry:cut()
 end
+ekeys[translate('alt+?')] = textadept.editing.show_documentation
 
 return {}
