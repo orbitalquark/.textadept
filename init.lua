@@ -8,14 +8,16 @@ view.h_scroll_bar, view.v_scroll_bar = false, false
 
 ui.tabs = false
 ui.find.highlight_all_matches = true
-ui.find.show_filenames_in_progressbar = false
 
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
 -- Always strip trailing spaces, except in patch files.
-events.connect(events.LEXER_LOADED, function(name)
-  textadept.editing.strip_trailing_spaces = name ~= 'diff'
-end)
+local function set_strip_trailing_spaces()
+  textadept.editing.strip_trailing_spaces = buffer.lexer_language ~= 'diff'
+end
+events.connect(events.LEXER_LOADED, set_strip_trailing_spaces)
+events.connect(events.BUFFER_AFTER_SWITCH, set_strip_trailing_spaces)
+events.connect(events.VIEW_AFTER_SWITCH, set_strip_trailing_spaces)
 lexer.detect_extensions.luadoc = 'lua'
 
 -- Audio cue on build success or failure.
@@ -34,24 +36,25 @@ local ta_filter = {
   '!api$', '![^c]tags$',
   -- Folders to exclude.
   '!/.hg$', '!/.git$', '!/.cache', --
+  '!CMakeFiles', '!autogen', '!%-build', '!%-subbuild', --
   '!images', --
-  '!lua/doc', '!lua/src/lib/lpeg', '!lua/src/lib/lfs', --
+  '!modules/debugger/luasocket', --
   '!modules/spellcheck/hunspell', --
   '!modules/yaml/libyaml', '!modules/yaml/lyaml', --
-  '!releases', --
-  '!scintilla/bin', '!scintilla/cocoa', '!scintilla/doc', '!scintilla/qt', '!scintilla/scripts',
-  '!scintilla/test', '!scintilla/win32', --
-  '!lexilla/access', '!lexilla/bin', '!lexilla/doc', '!lexilla/examples', '!lexilla/lexers',
-  '!lexilla/scripts', '!lexilla/src', '!lexilla/test', --
-  '!src/cdk', '!src/win32', '!src/gtkosx', '!src/gtkwin', '!src/termkey', --
-  '!/etc', '!/lib', '!/share' -- Windows folders
+  '!scintilla%-src/bin', '!scintilla%-src/cocoa', '!scintilla%-src/doc', '!scintilla%-src/scripts',
+  '!scintilla%-src/test', '!scintilla%-src/win32', --
+  '!lexilla%-src/access', '!lexilla%-src/bin', '!lexilla%-src/doc', '!lexilla%-src/examples',
+  '!lexilla%-src/lexers', '!lexilla%-src/scripts', '!lexilla%-src/src', '!lexilla%-src/test', --
+  '!scintillua%-src/docs', '!scintillua%-src/lexers', '!scintillua%-src/themes', --
+  '!scinterm%-src/docs', '!scinterm%-src/jinx', --
+  '!lua%-src/doc', '!lua/src/lib/lpeg', '!lfs%-src/docs', '!lfs%-src/vc6', --
+  '!cdk%-src/c%+%+', '!cdk%-src/cli', '!cdk%-src/demos', '!cdk%-src/examples', '!cdk%-src/man',
+  '!cdk%-src/package', --
+  '!termkey%-src/t/', '!termkey%-src/man'
 }
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
-local function ta_build() return 'make DEBUG=1 GTK2=1 -j16', _HOME .. '/src' end
-textadept.run.build_commands[_HOME] = ta_build
-textadept.run.build_commands[_HOME .. '/src/scintilla'] = ta_build
-textadept.run.build_commands[_HOME .. '/src/scintilla/curses'] = ta_build
+textadept.run.build_commands[_HOME] = string.format('cmake --build %s -j', _HOME .. '/build')
 textadept.run.test_commands[_HOME] = 'textadept -n -f -t -locale,-interactive'
 
 -- VCS diff of current file.
@@ -96,12 +99,13 @@ ctags[_HOME .. '/src/scintilla'] = _HOME .. '/tags'
 ctags[_HOME .. '/src/scintilla/curses'] = _HOME .. '/tags'
 ctags[_USERHOME] = ta_tags
 ctags.ctags_flags[_HOME] = table.concat({
-  '-R', 'src/textadept.c', 'src/gtdialog/gtdialog.c', 'src/scintilla/curses', 'src/scintilla/gtk',
-  'src/scintilla/include', 'src/scintilla/src', 'src/scintilla/lexers/Scintillua.cxx',
-  'src/lexilla/include', 'src/lexilla/lexlib'
+  '-R', 'src', 'build/_deps/scintilla-src/gtk', 'build/_deps/scintilla-src/include',
+  'build/_deps/scintilla-src/qt', 'build/_deps/scintilla-src/src',
+  'build/_deps/lexilla-src/include', 'build/_deps/lexilla-src/lexlib', 'build/_deps/scinterm-src',
+  'build/_deps/scintillua-src'
 }, ' ')
 ctags.api_commands[_HOME] = function()
-  os.spawn(string.format('make -C %s/src luadoc', _HOME)):wait()
+  os.spawn(string.format('cmake --build %s/build --target luadoc', _HOME)):wait()
   return nil -- keep default behavior
 end
 -- Load tags and api for external modules.
@@ -135,8 +139,7 @@ local debugger = require('debugger')
 -- Debugger settings for Textadept development.
 local debug_f = function(args)
   local debug_lua = WIN32 or
-    (ui.dialogs.yesno_msgbox{title = 'Lua?', text = 'Debug Lua too?', icon = 'gtk-dialog-question'} ==
-      1)
+    (ui.dialogs.yesno_msgbox{title = 'Lua?', text = 'Debug Lua too?', icon = 'dialog-question'} == 1)
   if debug_lua then
     args = {args}
     args[#args + 1] = string.format([[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
@@ -158,7 +161,7 @@ local debug_f = function(args)
   end
   require('debugger.gdb').logging = true -- also loads events
   print('textadept', args)
-  if debugger.start('ansi_c', _HOME .. '/textadept', args) then debugger.continue('ansi_c') end
+  if debugger.start('ansi_c', 'textadept', args) then debugger.continue('ansi_c') end
 end
 debugger.project_commands[_HOME] = function()
   if CURSES then return end -- not possible
@@ -170,7 +173,7 @@ end
 local format = require('format')
 
 -- Format settings for Textadept development.
-table.insert(format.ignore_file_patterns, '/src/scintilla/[^c][^u]') -- all scintilla except curses/
+table.insert(format.ignore_file_patterns, '/build/')
 
 -- Add option for toggling menubar visibility.
 local menubar_visible = false -- will be hidden on init
@@ -183,7 +186,19 @@ m_view[#m_view + 1] = {
   end
 }
 
-if not OSX then events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end) end
+-- if not OSX then events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end) end
+
+keys['ctrl+o'] = require('open_file_mode')
+if OSX then
+  keys['cmd+right'], keys['cmd+shift+right'] = buffer.word_right, buffer.word_right_extend
+  keys['cmd+left'], keys['cmd+shift+left'] = buffer.word_left, buffer.word_left_extend
+  keys['cmd+down'], keys['cmd+shift+down'] = buffer.para_down, buffer.para_down_extend
+  keys['cmd+up'], keys['cmd+shift+up'] = buffer.para_up, buffer.para_up_extend
+  keys['ctrl+cmd+right'] = buffer.word_part_right
+  keys['ctrl+cmd+shift+right'] = buffer.word_part_right_extend
+  keys['ctrl+cmd+left'] = buffer.word_part_left
+  keys['ctrl+cmd+shift+left'] = buffer.word_part_left_extend
+end
 
 -- Language-specific settings.
 
