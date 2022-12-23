@@ -176,20 +176,9 @@ local format = require('format')
 -- Format settings for Textadept development.
 table.insert(format.ignore_file_patterns, '/build/')
 
--- Add option for toggling menubar visibility.
-local menubar_visible = false -- will be hidden on init
-local m_view = textadept.menu.menubar[_L['View']]
-m_view[#m_view + 1] = {''}
-m_view[#m_view + 1] = {
-  'Toggle _Menubar', function()
-    menubar_visible = not menubar_visible
-    textadept.menu.menubar = menubar_visible and textadept.menu.menubar or nil
-  end
-}
-
--- if not OSX then events.connect(events.INITIALIZED, function() textadept.menu.menubar = nil end) end
-
-keys['ctrl+o'] = require('open_file_mode')
+keys[not OSX and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
+keys[not OSX and 'ctrl+f' or 'cmd+f'] =
+  textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
 if OSX then
   keys['cmd+right'], keys['cmd+shift+right'] = buffer.word_right, buffer.word_right_extend
   keys['cmd+left'], keys['cmd+shift+left'] = buffer.word_left, buffer.word_left_extend
