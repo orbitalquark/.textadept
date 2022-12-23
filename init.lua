@@ -33,24 +33,25 @@ local ta_filter = {
   -- Extensions to exclude.
   '!.a', '!.o', '!.so', '!.dll', '!.zip', '!.tgz', '!.gz', '!.exe', '!.osx', '!.orig', '!.rej',
   -- Files to exclude.
-  '!api$', '![^c]tags$',
+  '!api', '![^c]tags',
   -- Folders to exclude.
-  '!/.hg$', '!/.git$', '!/.cache', --
-  '!CMakeFiles', '!autogen', '!%-build', '!%-subbuild', --
+  '!/.hg', '!/.git', '!/.cache', --
+  '!CMakeFiles', '!*_autogen', '!*-build', '!*-subbuild', --
   '!images', --
-  '!modules/debugger/luasocket', --
-  '!modules/spellcheck/hunspell', --
+  '!modules/debugger/build', --
+  '!modules/file_diff/build', --
+  '!modules/spellcheck/build', --
   '!modules/yaml/libyaml', '!modules/yaml/lyaml', --
-  '!scintilla%-src/bin', '!scintilla%-src/cocoa', '!scintilla%-src/doc', '!scintilla%-src/scripts',
-  '!scintilla%-src/test', '!scintilla%-src/win32', --
-  '!lexilla%-src/access', '!lexilla%-src/bin', '!lexilla%-src/doc', '!lexilla%-src/examples',
-  '!lexilla%-src/lexers', '!lexilla%-src/scripts', '!lexilla%-src/src', '!lexilla%-src/test', --
-  '!scintillua%-src/docs', '!scintillua%-src/lexers', '!scintillua%-src/themes', --
-  '!scinterm%-src/docs', '!scinterm%-src/jinx', --
-  '!lua%-src/doc', '!lua/src/lib/lpeg', '!lfs%-src/docs', '!lfs%-src/vc6', --
-  '!cdk%-src/c%+%+', '!cdk%-src/cli', '!cdk%-src/demos', '!cdk%-src/examples', '!cdk%-src/man',
-  '!cdk%-src/package', --
-  '!termkey%-src/t/', '!termkey%-src/man'
+  '!scintilla-src/bin', '!scintilla-src/cocoa', '!scintilla-src/doc', '!scintilla-src/scripts',
+  '!scintilla-src/test', '!scintilla-src/win32', --
+  '!lexilla-src/access', '!lexilla-src/bin', '!lexilla-src/doc', '!lexilla-src/examples',
+  '!lexilla-src/lexers', '!lexilla-src/scripts', '!lexilla-src/src', '!lexilla-src/test', --
+  '!scintillua-src/docs', '!scintillua-src/lexers', '!scintillua-src/themes', --
+  '!scinterm-src/docs', '!scinterm-src/jinx', --
+  '!lua-src/doc', '!lua/src/lib/lpeg', '!lfs-src/docs', '!lfs-src/vc6', --
+  '!cdk-src/c++', '!cdk-src/cli', '!cdk-src/demos', '!cdk-src/examples', '!cdk-src/man',
+  '!cdk-src/package', --
+  '!termkey-src/t', '!termkey-src/man'
 }
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
