@@ -18,7 +18,6 @@ events.connect(events.BUFFER_AFTER_SWITCH, set_strip_trailing_spaces)
 events.connect(events.VIEW_AFTER_SWITCH, set_strip_trailing_spaces)
 lexer.detect_extensions.luadoc = 'lua'
 textadept.run.build_commands['CMakeLists.txt'] = 'cmake --build build'
-textadept.run.run_in_background = true
 
 -- Audio cue on build success or failure.
 events.connect(events.BUILD_OUTPUT, function(output)
