@@ -24,7 +24,7 @@ events.connect(events.BUILD_OUTPUT, function(output)
   local status = output:match('^> exit status: (%d+)')
   if not status then return end
   local wav = tonumber(status) == 0 and 'leveled_up2.wav' or 'sorry.wav'
-  os.spawn('mpv /home/mitchell/config/sounds/' .. wav)
+  os.spawn(string.format('mpv %s/config/sounds/%s', os.getenv('HOME'), wav))
 end)
 
 -- Core settings for Textadept development.
@@ -315,4 +315,4 @@ snip.bwsp = 'buffer:word_start_position'
 require('lua_repl')
 
 -- Settings for Scintillua development.
-textadept.run.test_commands['/home/mitchell/code/scintillua'] = 'lua tests.lua'
+textadept.run.test_commands[os.getenv('HOME') .. '/code/scintillua'] = 'lua tests.lua'
