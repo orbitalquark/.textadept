@@ -134,6 +134,8 @@ local format = require('format')
 -- Format settings for Textadept development.
 table.insert(format.ignore_file_patterns, '/build/')
 
+require('scratch')
+
 keys[not OSX and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[not OSX and 'ctrl+f' or 'cmd+f'] =
 	textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
