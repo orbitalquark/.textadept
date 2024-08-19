@@ -31,10 +31,10 @@ end)
 -- Core settings for Textadept development.
 local ta_filter = {
 	-- Extensions to exclude.
-	'!.a', '!.o', '!.so', '!.zip', '!.tgz', '!.gz',
+	'!.a', '!.o', '!.so', '!.zip', '!.tgz', '!.gz', '!.out',
 	-- Folders to exclude.
 	'!/.hg', '!/.git/', '!/.cache', --
-	'!CMakeFiles', '!*_autogen', '!*-build', '!*-subbuild', --
+	'!CMakeFiles', '!/build/Debug', '!*_autogen', '!*-build', '!*-subbuild', --
 	'!images', --
 	'!modules/debugger/build', --
 	'!modules/file_diff/build', --
