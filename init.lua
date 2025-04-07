@@ -60,7 +60,7 @@ local ta_filter = {
 }
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
-textadept.run.test_commands[_HOME] = 'textadept -n -f -u /tmp -t -locale,-interactive'
+textadept.run.test_commands[_HOME] = 'textadept -f -t'
 
 -- VCS diff of current file.
 local m_file = textadept.menu.menubar[_L['File']]
