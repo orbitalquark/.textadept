@@ -4,6 +4,7 @@ if not CURSES then view:set_theme{font = 'Ubuntu', size = 16} end
 
 buffer.tab_width = 2
 
+io.track_changes = true
 ui.tabs = false
 ui.find.highlight_all_matches = true
 
