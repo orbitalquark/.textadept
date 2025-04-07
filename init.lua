@@ -150,6 +150,12 @@ table.insert(format.ignore_file_patterns, '/build/')
 
 require('scratch')
 
+require('ollama')
+events.connect(events.MODEL_RESPONSE, function()
+	local play = not OSX and 'mpv' or 'afplay'
+	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
+end)
+
 keys[not OSX and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[not OSX and 'ctrl+f' or 'cmd+f'] =
 	textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
