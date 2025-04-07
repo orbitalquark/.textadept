@@ -126,7 +126,7 @@ local debug_f = function(args)
 		return
 	end
 	require('debugger.gdb').logging = true -- also loads events
-	if debugger.start('ansi_c', _HOME .. '/build/textadept', args) then debugger.continue('ansi_c') end
+	if debugger.start('c', _HOME .. '/build/textadept', args) then debugger.continue('c') end
 end
 debugger.project_commands[_HOME] = function()
 	if CURSES then return end -- not possible
@@ -158,7 +158,7 @@ end
 
 -- Language-specific settings.
 
-for _, lexer in ipairs{'ansi_c', 'cpp'} do
+for _, lexer in ipairs{'c', 'cpp'} do
 	local snip = snippets[lexer]
 	-- Lua Standard library.
 	snip.lai = 'lua_absindex(${1:L}, ${2:idx})'
