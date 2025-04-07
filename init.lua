@@ -153,16 +153,6 @@ require('scratch')
 keys[not OSX and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[not OSX and 'ctrl+f' or 'cmd+f'] =
 	textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
-if OSX then
-	keys['cmd+right'], keys['cmd+shift+right'] = buffer.word_right, buffer.word_right_extend
-	keys['cmd+left'], keys['cmd+shift+left'] = buffer.word_left, buffer.word_left_extend
-	keys['cmd+down'], keys['cmd+shift+down'] = buffer.para_down, buffer.para_down_extend
-	keys['cmd+up'], keys['cmd+shift+up'] = buffer.para_up, buffer.para_up_extend
-	keys['ctrl+cmd+right'] = buffer.word_part_right
-	keys['ctrl+cmd+shift+right'] = buffer.word_part_right_extend
-	keys['ctrl+cmd+left'] = buffer.word_part_left
-	keys['ctrl+cmd+shift+left'] = buffer.word_part_left_extend
-end
 
 -- Language-specific settings.
 
