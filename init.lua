@@ -2,7 +2,6 @@
 
 if not CURSES then view:set_theme{font = 'Ubuntu', size = 16} end
 
-view.h_scroll_bar, view.v_scroll_bar = false, false
 buffer.tab_width = 2
 
 ui.tabs = false
