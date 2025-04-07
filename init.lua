@@ -92,7 +92,15 @@ require('spellcheck')
 require('file_diff')
 
 -- Language Server Protocol.
-require('lsp')
+local lsp = require('lsp')
+lsp.server_commands.c = 'clangd'
+lsp.server_commands.cpp = 'clangd'
+events.connect(events.LSP_INITIALIZED, function(lang, server)
+	if lang == 'c' or lang == 'cpp' then
+		server.auto_c_triggers[string.byte('/')] = false
+		-- server.auto_c_fill_ups = '' -- only needed for clangd 12-14
+	end
+end)
 
 -- Debugger module.
 local debugger = require('debugger')
