@@ -1,6 +1,6 @@
 -- Copyright 2007-2025 Mitchell. See LICENSE.
 
-if not CURSES then view:set_theme{font = 'Ubuntu', size = 13} end
+if not CURSES then view:set_theme{font = 'Ubuntu', size = 16} end
 
 view.h_scroll_bar, view.v_scroll_bar = false, false
 buffer.tab_width = 2
@@ -20,13 +20,18 @@ events.connect(events.VIEW_AFTER_SWITCH, set_strip_trailing_spaces)
 lexer.detect_extensions.luadoc = 'lua'
 textadept.run.build_commands['CMakeLists.txt'] = 'cmake --build build'
 
--- Audio cue on build success or failure.
-events.connect(events.BUILD_OUTPUT, function(output)
-	local status = output:match('^> exit status: (%d+)')
-	if not status then return end
-	local wav = tonumber(status) == 0 and 'leveled_up2.wav' or 'sorry.wav'
-	os.spawn(string.format('mpv %s/config/sounds/%s', os.getenv('HOME'), wav))
-end)
+-- Play audio cues on build/test success or failure.
+local function play_audio(event, success, fail)
+	return function(output)
+		local status = output:match('^> exit status: (%d+)')
+		if not status then return end
+		local wav = tonumber(status) == 0 and success or fail
+		local play = not OSX and 'mpv' or 'afplay'
+		os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), wav))
+	end
+end
+events.connect(events.BUILD_OUTPUT, play_audio(events.BUILD_OUTPUT, 'done.wav', 'nonononono.wav'))
+events.connect(events.TEST_OUTPUT, play_audio(events.TEST_OUTPUT, 'yay_us.wav', 'sorry.wav'))
 
 -- Core settings for Textadept development.
 local ta_filter = {
@@ -34,7 +39,8 @@ local ta_filter = {
 	'!.a', '!.o', '!.so', '!.zip', '!.tgz', '!.gz', '!.out',
 	-- Folders to exclude.
 	'!/.hg', '!/.git/', '!/.cache', --
-	'!CMakeFiles', '!/build/Debug', '!*_autogen', '!*-build', '!*-subbuild', --
+	'!CMakeFiles', '!/build/textadept', '!/build/install', '!*_autogen', '!*-build', '!*-subbuild', --
+	'!docs/_site', --
 	'!images', --
 	'!modules/debugger/build', --
 	'!modules/file_diff/build', --
