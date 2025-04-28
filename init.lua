@@ -35,28 +35,12 @@ events.connect(events.TEST_OUTPUT, play_audio(events.TEST_OUTPUT, 'yay_us.wav', 
 
 -- Core settings for Textadept development.
 local ta_filter = {
-	-- Extensions to exclude.
-	'!.a', '!.o', '!.so', '!.zip', '!.tgz', '!.gz', '!.out',
-	-- Folders to exclude.
-	'!/.hg', '!/.git/', '!/.cache', --
-	'!CMakeFiles', '!/build/textadept', '!/build/install', '!*_autogen', '!*-build', '!*-subbuild', --
-	'!docs/_site', --
-	'!images', --
-	'!modules/debugger/build', --
-	'!modules/file_diff/build', --
-	'!modules/lsp/build', '!modules/lsp/doc', '!modules/lsp/pl', '!modules/lsp/ldoc',
-	'!modules/lsp/logging', --
-	'!modules/spellcheck/build', --
-	'!scintilla-src/bin', '!scintilla-src/cocoa', '!scintilla-src/doc', '!scintilla-src/scripts',
-	'!scintilla-src/test', '!scintilla-src/win32', --
-	'!lexilla-src/access', '!lexilla-src/bin', '!lexilla-src/doc', '!lexilla-src/examples',
-	'!lexilla-src/lexers', '!lexilla-src/scripts', '!lexilla-src/src', '!lexilla-src/test', --
-	'!scintillua-src/docs', '!scintillua-src/lexers', '!scintillua-src/themes', --
-	'!scinterm-src/docs', '!scinterm-src/jinx', --
-	'!lua-src/doc', '!lua/src/lib/lpeg', '!lfs-src/docs', '!lfs-src/vc6', --
-	'!cdk-src/c++', '!cdk-src/cli', '!cdk-src/demos', '!cdk-src/examples', '!cdk-src/man',
-	'!cdk-src/package', --
-	'!termkey-src/t', '!termkey-src/man'
+	'*', '!*.out', '!.cache',
+	'build/_deps/{cdk-src/*,lua-src/src/*,regex-src/*,scinterm-src/*,termkey-src/*}',
+	'build/_deps/scintilla-src/{gtk/*,qt/**,src/*}', 'core/**', 'docs/**', '!docs/_site', 'lexers/*',
+	'scripts/**', 'src/*', 'test/*', 'themes/*',
+	'modules/{export,file_diff/format,lsp,lua_repl,ollama,open_file_mode,scratch,spellcheck,textadept}/*',
+	'modules/debugger/{*,gdb/*,go/*,lua/*}'
 }
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
