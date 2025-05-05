@@ -35,11 +35,12 @@ events.connect(events.TEST_OUTPUT, play_audio(events.TEST_OUTPUT, 'yay_us.wav', 
 
 -- Core settings for Textadept development.
 local ta_filter = {
-	'*', '!*.out', '!.cache',
+	'*', '!*.out', '!.cache', --
+	'.github/workflows/*', 'modules/*/.github/workflows/*',
 	'build/_deps/{cdk-src/*,lua-src/src/*,regex-src/*,scinterm-src/*,termkey-src/*}',
-	'build/_deps/scintilla-src/{gtk/*,qt/**,src/*}', 'core/**', 'docs/**', '!docs/_site', 'lexers/*',
-	'scripts/**', 'src/*', 'test/*', 'themes/*',
-	'modules/{export,file_diff/format,lsp,lua_repl,ollama,open_file_mode,scratch,spellcheck,textadept}/*',
+	'build/_deps/scintilla-src/{include/*,gtk/*,qt/**,src/*}', 'core/**', 'docs/**', '!docs/_site',
+	'lexers/*', 'scripts/**', 'src/*', 'test/*', 'themes/*',
+	'modules/{export,file_diff,format,lsp,lua_repl,ollama,open_file_mode,scratch,spellcheck,textadept}/*',
 	'modules/debugger/{*,gdb/*,go/*,lua/*}'
 }
 io.quick_open_filters[_HOME] = ta_filter
