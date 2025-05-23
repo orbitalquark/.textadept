@@ -21,17 +21,42 @@ lexer.detect_extensions.luadoc = 'lua'
 textadept.run.build_commands['CMakeLists.txt'] = 'cmake --build build'
 
 -- Play audio cues on build/test success or failure.
-local function play_audio(event, success, fail)
-	return function(output)
-		local status = output:match('^> exit status: (%d+)')
-		if not status then return end
-		local wav = tonumber(status) == 0 and success or fail
-		local play = not OSX and 'mpv' or 'afplay'
-		os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), wav))
+local play_audio = true
+local starts = {'bring_it_on', 'ready_set_go'}
+local successes = {
+	'all_right', 'done', 'keep_it_up', 'that_was_great', 'unstoppable', 'yay_us', 'yeah'
+}
+local failures = {
+	'aaaaa', 'nonononono', 'not_again', 'oh_no', 'oh_no2', 'oopsie', 'sorry', 'uh_oh',
+	'what_went_wrong'
+}
+local function audio_cue(output)
+	if not play_audio then return end
+	local wav
+	if output:find('^> cd ') then
+		wav = starts[math.random(#starts)]
+	elseif output:find('^> exit status: %d+') then
+		local t = tonumber(output:match('^> exit status: (%d+)')) == 0 and successes or failures
+		wav = t[math.random(#t)]
+	end
+	if not wav then return end
+	local play = not OSX and 'mpv' or 'afplay'
+	os.spawn(string.format('%s %s/Documents/config/sounds/%s.wav', play, os.getenv('HOME'), wav))
+end
+for _, event in ipairs{'RUN', 'COMPILE', 'BUILD', 'TEST'} do
+	events.connect(events[event .. '_OUTPUT'], audio_cue)
+end
+local function toggle_audio()
+	play_audio = not play_audio
+	ui.statusbar_text = 'Audio cues ' .. (play_audio and 'on' or 'off')
+end
+local m_tools = textadept.menu.menubar['Tools']
+for i, item in ipairs(m_tools) do
+	if item[1] == _L['Previous Error'] then
+		table.insert(m_tools, i + 1, {'Toggle Audio Cues', toggle_audio})
+		break
 	end
 end
-events.connect(events.BUILD_OUTPUT, play_audio(events.BUILD_OUTPUT, 'done.wav', 'nonononono.wav'))
-events.connect(events.TEST_OUTPUT, play_audio(events.TEST_OUTPUT, 'yay_us.wav', 'sorry.wav'))
 
 -- Core settings for Textadept development.
 local ta_filter = {
