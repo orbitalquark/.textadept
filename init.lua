@@ -115,7 +115,7 @@ local debugger = require('debugger')
 
 -- Debugger settings for Textadept development.
 local debug_f = function(args)
-	local debug_lua = WIN32 or (ui.dialogs.message{
+	local debug_lua = not LINUX or (ui.dialogs.message{
 		title = 'Lua?', text = 'Debug Lua too?', icon = 'dialog-question', button1 = '&Yes',
 		button2 = '&No'
 	} == 1)
@@ -136,7 +136,7 @@ local debug_f = function(args)
 			if debugger.start('lua', '-') then debugger.continue('lua') end
 		end)
 	end
-	if WIN32 then
+	if not LINUX then
 		-- Cannot run gdb, so just run and debug Lua
 		os.spawn(((arg[0] .. ' ' .. args):gsub('\\', '\\\\')))
 		return
