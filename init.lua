@@ -61,12 +61,11 @@ end
 -- Core settings for Textadept development.
 local ta_filter = {
 	'*', '!*.out', '!.cache', --
-	'.github/workflows/*', 'modules/*/.github/workflows/*',
+	'.github/workflows/*', 'modules/*/.github/workflows/*', -- no **/ for speed
 	'build/_deps/{cdk-src/*,lua-src/src/*,regex-src/*,scinterm-src/*,termkey-src/*}',
-	'build/_deps/scintilla-src/{include/*,gtk/*,qt/**,src/*}', 'core/**', 'docs/**', '!docs/_site',
-	'lexers/*', 'scripts/**', 'src/*', 'test/*', 'themes/*',
-	'modules/{export,file_diff,format,lsp,lua_repl,ollama,open_file_mode,scratch,spellcheck,textadept}/*',
-	'modules/debugger/{*,gdb/*,go/*,lua/*}'
+	'build/_deps/scintilla-src/{include/*,gtk/*,qt/**,src/*}', --
+	'core/**', 'docs/**', '!docs/_site', 'lexers/*', 'scripts/**', 'src/*', 'test/*', 'themes/*',
+	'modules/*/*', 'modules/debugger/{gdb,go,lua}/*'
 }
 io.quick_open_filters[_HOME] = ta_filter
 ui.find.find_in_files_filters[_HOME] = ta_filter
