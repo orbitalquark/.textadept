@@ -160,6 +160,7 @@ require('scratch')
 
 require('ollama')
 events.connect(events.MODEL_RESPONSE, function()
+	if not play_audio then return end
 	local play = not OSX and 'mpv' or 'afplay'
 	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
 end)
