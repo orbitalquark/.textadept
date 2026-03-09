@@ -158,12 +158,28 @@ table.insert(format.ignore_file_patterns, '/build/')
 
 require('scratch')
 
-require('ollama')
+-- Play audio cues when an LLM finishes responding, and speak LLM output as it streams.
+require('llm')
 events.connect(events.MODEL_RESPONSE, function()
 	if not play_audio then return end
 	local play = not OSX and 'mpv' or 'afplay'
 	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
 end)
+local responses = {}
+local function queue_tts(arg)
+	if not play_audio then return end
+	if type(arg) == 'string' then -- streaming model response
+		responses[#responses + 1] = arg
+		if #responses > 1 then return end
+	else -- current tts process finished
+		table.remove(responses, 1)
+		if #responses == 0 then return end
+	end
+	local p = os.spawn('tts', nil, nil, queue_tts)
+	p:write(responses[1])
+	p:close()
+end
+events.connect(events.MODEL_RESPONSE_STREAM, queue_tts)
 
 keys[not OSX and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[not OSX and 'ctrl+f' or 'cmd+f'] =
