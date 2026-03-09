@@ -152,6 +152,7 @@ end
 
 -- Format module.
 local format = require('format')
+format.commands.python = 'black -'
 
 -- Format settings for Textadept development.
 table.insert(format.ignore_file_patterns, '/build/')
