@@ -9,6 +9,9 @@ ui.find.highlight_all_matches = true
 
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
+-- Do not auto-pair single quotes in certain lexers like plaintext and markdown.
+local no_squotes = setmetatable({["'"] = false}, {__index = textadept.editing.auto_pairs})
+for _, lang in ipairs{'text', 'markdown'} do textadept.editing.auto_pairs[lang] = no_squotes end
 -- Always strip trailing spaces, except in patch files.
 local function set_strip_trailing_spaces()
 	textadept.editing.strip_trailing_spaces = buffer.lexer_language ~= 'diff'
