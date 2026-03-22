@@ -192,6 +192,7 @@ end
 events.connect(events.MODEL_RESPONSE_STREAM, queue_tts)
 
 keys[(not OSX or CURSES) and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
+keys[(not OSX or CURSES) and 'ctrl+alt+f' or 'ctrl+cmd+f'] = ui.find.focus
 keys[(not OSX or CURSES) and 'ctrl+f' or 'cmd+f'] =
 	textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
 
