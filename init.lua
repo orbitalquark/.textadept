@@ -96,6 +96,12 @@ table.insert(m_file, #m_file - 1, {
 	end
 })
 
+if OSX and not os.getenv('TEXTADEPT_HOME') then
+	textadept.session.save_on_quit = false
+	ui.dialogs.message{title = 'Restart Textadept', text = 'macOS has not yet set TEXTADEPT_HOME'}
+	return -- avoid module loading errors
+end
+
 -- Spellcheck module.
 require('spellcheck')
 
