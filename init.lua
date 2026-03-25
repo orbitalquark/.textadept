@@ -168,28 +168,26 @@ table.insert(format.ignore_file_patterns, '/build/')
 
 require('scratch')
 
+local llm = require('llm')
+llm.config.url = 'http://localhost:8080/v1'
+local qwen_cfg = {stream = true, temperature = 0.7, top_p = 0.8, top_k = 20, max_tokens = 32768}
+llm.config.model['mlx-community/Qwen3.5-4B-4bit'] = qwen_cfg
+llm.config.model['mlx-community/Qwen3.5-9B-4bit'] = qwen_cfg
+local tts_proc = nil
 -- Play audio cues when an LLM finishes responding, and speak LLM output as it streams.
-require('llm')
 events.connect(events.MODEL_RESPONSE, function()
 	if not play_audio then return end
 	local play = not OSX and 'mpv' or 'afplay'
 	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
 end)
-local responses = {}
-local function queue_tts(arg)
-	if not play_audio then return end
-	if type(arg) == 'string' then -- streaming model response
-		responses[#responses + 1] = arg
-		if #responses > 1 then return end
-	else -- current tts process finished
-		table.remove(responses, 1)
-		if #responses == 0 then return end
+events.connect(events.MODEL_RESPONSE_STREAM, function(text, done)
+	if not tts_proc then tts_proc = os.spawn('tts') end
+	tts_proc:write(text)
+	if done then
+		tts_proc:close()
+		tts_proc = nil
 	end
-	local p = os.spawn('tts', nil, nil, queue_tts)
-	p:write(responses[1])
-	p:close()
-end
-events.connect(events.MODEL_RESPONSE_STREAM, queue_tts)
+end)
 
 keys[(not OSX or CURSES) and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[(not OSX or CURSES) and 'ctrl+alt+f' or 'ctrl+cmd+f'] = ui.find.focus
