@@ -181,6 +181,7 @@ events.connect(events.MODEL_RESPONSE, function()
 	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
 end)
 events.connect(events.MODEL_RESPONSE_STREAM, function(text, done)
+	if not play_audio then return end
 	if not tts_proc then tts_proc = os.spawn('tts') end
 	tts_proc:write(text)
 	if done then
