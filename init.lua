@@ -1,24 +1,15 @@
--- Copyright 2007-2025 Mitchell. See LICENSE.
+-- Copyright 2007-2026 Mitchell. See LICENSE.
 
 if not CURSES then view:set_theme{font = 'Ubuntu', size = 16} end
 
 buffer.tab_width = 2
 
-io.track_changes = true
 ui.find.highlight_all_matches = true
 
 textadept.editing.highlight_words = textadept.editing.HIGHLIGHT_SELECTED
 textadept.editing.auto_enclose = true
--- Do not auto-pair single quotes in certain lexers like plaintext and markdown.
 local no_squotes = setmetatable({["'"] = false}, {__index = textadept.editing.auto_pairs})
 for _, lang in ipairs{'text', 'markdown'} do textadept.editing.auto_pairs[lang] = no_squotes end
--- Always strip trailing spaces, except in patch files.
-local function set_strip_trailing_spaces()
-	textadept.editing.strip_trailing_spaces = buffer.lexer_language ~= 'diff'
-end
-events.connect(events.LEXER_LOADED, set_strip_trailing_spaces)
-events.connect(events.BUFFER_AFTER_SWITCH, set_strip_trailing_spaces)
-events.connect(events.VIEW_AFTER_SWITCH, set_strip_trailing_spaces)
 lexer.detect_extensions.luadoc = 'lua'
 textadept.run.build_commands['CMakeLists.txt'] = 'cmake --build build'
 
@@ -96,11 +87,8 @@ table.insert(m_file, #m_file - 1, {
 	end
 })
 
-if OSX and not os.getenv('TEXTADEPT_HOME') then
-	textadept.session.save_on_quit = false
-	ui.dialogs.message{title = 'Restart Textadept', text = 'macOS has not yet set TEXTADEPT_HOME'}
-	return -- avoid module loading errors
-end
+-- A startup item sets TEXTADEPT_HOME, but macOS may reopen Textadept first.
+assert(OSX and os.getenv('TEXTADEPT_HOME'), 'macOS has not yet set TEXTADEPT_HOME')
 
 -- Spellcheck module.
 require('spellcheck')
@@ -113,10 +101,7 @@ local lsp = require('lsp')
 lsp.server_commands.c = 'clangd'
 lsp.server_commands.cpp = 'clangd'
 events.connect(events.LSP_INITIALIZED, function(lang, server)
-	if lang == 'c' or lang == 'cpp' then
-		server.auto_c_triggers[string.byte('/')] = false
-		-- server.auto_c_fill_ups = '' -- only needed for clangd 12-14
-	end
+	if lang == 'c' or lang == 'cpp' then server.auto_c_triggers[string.byte('/')] = false end
 end)
 
 -- Debugger module.
@@ -174,20 +159,17 @@ local qwen_cfg = {stream = true, temperature = 0.7, top_p = 0.8, top_k = 20, max
 llm.config.model['mlx-community/Qwen3.5-4B-4bit'] = qwen_cfg
 llm.config.model['mlx-community/Qwen3.5-9B-4bit'] = qwen_cfg
 local tts_proc = nil
--- Play audio cues when an LLM finishes responding, and speak LLM output as it streams.
-events.connect(events.MODEL_RESPONSE, function()
-	if not play_audio then return end
-	local play = not OSX and 'mpv' or 'afplay'
-	os.spawn(string.format('%s %s/Documents/config/sounds/%s', play, os.getenv('HOME'), 'hey.wav'))
-end)
+-- Speak LLM output as it streams.
 events.connect(events.MODEL_RESPONSE_STREAM, function(text, done)
-	if not play_audio then return end
-	if not tts_proc then tts_proc = os.spawn('tts') end
-	tts_proc:write(text)
-	if done then
-		tts_proc:close()
-		tts_proc = nil
+	if play_audio then
+		if not tts_proc then tts_proc = os.spawn('tts') end
+		tts_proc:write(text)
+		if not done then return end
+	elseif not tts_proc then
+		return
 	end
+	tts_proc:close()
+	tts_proc = nil
 end)
 
 keys[(not OSX or CURSES) and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
