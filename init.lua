@@ -163,14 +163,20 @@ local tts_proc = nil
 events.connect(events.MODEL_RESPONSE_STREAM, function(text, done)
 	if play_audio then
 		if not tts_proc then tts_proc = os.spawn('tts') end
-		tts_proc:write(text)
+		if tts_proc:status() == 'running' then tts_proc:write(text) end
 		if not done then return end
 	elseif not tts_proc then
 		return
 	end
-	tts_proc:close()
+	if tts_proc:status() == 'running' then tts_proc:close() end
 	tts_proc = nil
 end)
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+N' or 'cmd+N'] =
+	textadept.menu.menubar[_L['Tools']][_L['LLM (AI)']][_L['New Chat...']][2]
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+alt+X' or 'ctrl+cmd+X'] =
+	textadept.menu.menubar[_L['Tools']][_L['LLM (AI)']][_L['Stop Incoming Message']][2]
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+alt+z' or 'ctrl+cmd+z'] =
+	textadept.menu.menubar[_L['Tools']][_L['LLM (AI)']][_L['Undo Last Message']][2]
 
 keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
 keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+alt+f' or 'ctrl+cmd+f'] = ui.find.focus
