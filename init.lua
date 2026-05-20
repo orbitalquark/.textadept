@@ -1,6 +1,6 @@
 -- Copyright 2007-2026 Mitchell. See LICENSE.
 
-if not CURSES then view:set_theme{font = 'Ubuntu', size = 16} end
+if UI ~= 'terminal' then view:set_theme{font = 'Ubuntu', size = 16} end
 
 buffer.tab_width = 2
 
@@ -33,7 +33,7 @@ local function audio_cue(output)
 		wav = t[math.random(#t)]
 	end
 	if not wav then return end
-	local play = not OSX and 'mpv' or 'afplay'
+	local play = OS ~= 'macos' and 'mpv' or 'afplay'
 	os.spawn(string.format('%s %s/Documents/config/sounds/%s.wav', play, os.getenv('HOME'), wav))
 end
 for _, event in ipairs{'RUN', 'COMPILE', 'BUILD', 'TEST'} do
@@ -88,7 +88,7 @@ table.insert(m_file, #m_file - 1, {
 })
 
 -- A startup item sets TEXTADEPT_HOME, but macOS may reopen Textadept first.
-assert(OSX and os.getenv('TEXTADEPT_HOME'), 'macOS has not yet set TEXTADEPT_HOME')
+assert(OS == 'macos' and os.getenv('TEXTADEPT_HOME'), 'macOS has not yet set TEXTADEPT_HOME')
 
 -- Spellcheck module.
 require('spellcheck')
@@ -109,7 +109,7 @@ local debugger = require('debugger')
 
 -- Debugger settings for Textadept development.
 local debug_f = function(args)
-	local debug_lua = not LINUX or (ui.dialogs.message{
+	local debug_lua = OS ~= 'linux' or (ui.dialogs.message{
 		title = 'Lua?', text = 'Debug Lua too?', icon = 'dialog-question', button1 = '&Yes',
 		button2 = '&No'
 	} == 1)
@@ -118,7 +118,7 @@ local debug_f = function(args)
 		args[#args + 1] = string.format([[-e "package.path='%s/modules/debugger/lua/?.lua;%s'"]], _HOME,
 			package.path)
 		args[#args + 1] = string.format([[-e "package.cpath='%s/modules/debugger/lua/?.%s;%s'"]], _HOME,
-			not WIN32 and 'so' or 'dll', package.cpath)
+			OS ~= 'windows' and 'so' or 'dll', package.cpath)
 		args[#args + 1] = [[-e "_=require('mobdebug').coro()"]]
 		args[#args + 1] = [[-e "_=require('mobdebug').start()"]]
 		args = table.concat(args, ' ')
@@ -130,7 +130,7 @@ local debug_f = function(args)
 			if debugger.start('lua', '-') then debugger.continue('lua') end
 		end)
 	end
-	if not LINUX then
+	if OS ~= 'linux' then
 		-- Cannot run gdb, so just run and debug Lua
 		os.spawn(((arg[0] .. ' ' .. args):gsub('\\', '\\\\')))
 		return
@@ -139,7 +139,7 @@ local debug_f = function(args)
 	if debugger.start('c', _HOME .. '/build/textadept', args) then debugger.continue('c') end
 end
 debugger.project_commands[_HOME] = function()
-	if CURSES then return end -- not possible
+	if UI == 'terminal' then return end -- not possible
 	ui.command_entry.run('Debug Textadept:', debug_f, 'bash', '-n -f')
 	-- Do not return anything, let debug_f invoke the debug start command(s).
 end
@@ -172,9 +172,9 @@ events.connect(events.MODEL_RESPONSE_STREAM, function(text, done)
 	tts_proc = nil
 end)
 
-keys[(not OSX or CURSES) and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
-keys[(not OSX or CURSES) and 'ctrl+alt+f' or 'ctrl+cmd+f'] = ui.find.focus
-keys[(not OSX or CURSES) and 'ctrl+f' or 'cmd+f'] =
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+o' or 'cmd+o'] = require('open_file_mode')
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+alt+f' or 'ctrl+cmd+f'] = ui.find.focus
+keys[(OS ~= 'macos' or UI == 'terminal') and 'ctrl+f' or 'cmd+f'] =
 	textadept.menu.menubar[_L['Search']][_L['Find Incremental']][2]
 
 -- Language-specific settings.
