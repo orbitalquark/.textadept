@@ -88,7 +88,7 @@ table.insert(m_file, #m_file - 1, {
 })
 
 -- A startup item sets TEXTADEPT_HOME, but macOS may reopen Textadept first.
-assert(OS == 'macos' and os.getenv('TEXTADEPT_HOME'), 'macOS has not yet set TEXTADEPT_HOME')
+if OS == 'macos' then assert(os.getenv('TEXTADEPT_HOME'), 'macOS has not yet set TEXTADEPT_HOME') end
 
 -- Spellcheck module.
 require('spellcheck')
